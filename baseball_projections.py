@@ -8,8 +8,8 @@ Baseball Projection Analyzer
 Usage in Jupyter:
     from baseball_projections import run
     df = run(
-        pre_csv="fangraphs-preseason-projections-2026.csv",
-        cur_csv="fangraphs-may4-projection.csv",
+        pre_csv="fangraphs-preseason-hitters-projections-2026.csv",
+        cur_csv="fangraphs-hitters-current.csv",
         pos="hitter",
         stat="HR",
         buy=3,

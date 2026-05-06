@@ -236,6 +236,104 @@
     color: var(--accent);
     font-size: 11px;
   }
+
+  .search-box {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 24px;
+  }
+
+  .search-input {
+    width: 100%;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 15px;
+    padding: 12px 16px;
+    border-radius: 6px;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  .search-input:focus { border-color: var(--accent); }
+  .search-input::placeholder { color: var(--muted); }
+
+  .search-hint {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+    margin-top: 10px;
+  }
+
+  .player-cards { display: flex; flex-direction: column; gap: 16px; }
+
+  .player-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+  .player-card.my-team { border-color: rgba(79,143,255,0.35); }
+
+  .player-card-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 18px;
+    border-bottom: 1px solid var(--border);
+    background: rgba(255,255,255,0.02);
+  }
+  .player-card-name {
+    font-weight: 500;
+    font-size: 15px;
+    color: var(--text);
+    flex: 1;
+  }
+  .player-card-team {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+  }
+  .player-type-badge {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 1px;
+    padding: 3px 8px;
+    border-radius: 4px;
+    text-transform: uppercase;
+    background: rgba(79,143,255,0.1);
+    color: var(--accent);
+    border: 1px solid rgba(79,143,255,0.2);
+  }
+  .my-team-badge {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 1px;
+    padding: 3px 8px;
+    border-radius: 4px;
+    text-transform: uppercase;
+    background: rgba(79,143,255,0.15);
+    color: var(--accent);
+    border: 1px solid rgba(79,143,255,0.3);
+  }
+
+  .player-card table {
+    background: transparent;
+    border: none;
+    border-radius: 0;
+  }
+  .player-card thead { background: rgba(255,255,255,0.015); }
+  .player-card tbody tr:last-child { border-bottom: none; }
+
+  .no-results {
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    color: var(--muted);
+    text-align: center;
+    padding: 40px;
+  }
 </style>
 </head>
 <body>
@@ -250,6 +348,7 @@
   <div class="tabs">
     <button class="tab-btn active" onclick="switchTab('hitters')">Hitters</button>
     <button class="tab-btn" onclick="switchTab('pitchers')">Pitchers</button>
+    <button class="tab-btn" onclick="switchTab('search')">Player Search</button>
   </div>
 
   <!-- HITTER SECTION -->
@@ -321,6 +420,16 @@
     <div id="pitcher-content"></div>
   </div>
 
+  <!-- SEARCH SECTION -->
+  <div id="search-section" style="display:none">
+    <div class="search-box">
+      <input class="search-input" id="player-search-input" type="text"
+        placeholder="Search by player name…" oninput="runSearch()" autocomplete="off">
+      <div class="search-hint" id="search-hint">Type at least 2 characters to search across all hitters and pitchers.</div>
+    </div>
+    <div class="player-cards" id="search-results"></div>
+  </div>
+
 </div>
 
 <script>
@@ -351,11 +460,91 @@ let activeTab = 'hitters';
 
 function switchTab(tab) {
   activeTab = tab;
-  document.getElementById('hitter-section').style.display = tab === 'hitters' ? '' : 'none';
+  document.getElementById('hitter-section').style.display  = tab === 'hitters' ? '' : 'none';
   document.getElementById('pitcher-section').style.display = tab === 'pitchers' ? '' : 'none';
+  document.getElementById('search-section').style.display  = tab === 'search'   ? '' : 'none';
+  const tabs = ['hitters', 'pitchers', 'search'];
   document.querySelectorAll('.tab-btn').forEach((btn, i) => {
-    btn.classList.toggle('active', (i === 0) === (tab === 'hitters'));
+    btn.classList.toggle('active', tabs[i] === tab);
   });
+  if (tab === 'search') document.getElementById('player-search-input').focus();
+}
+
+function getSignal(delta, info) {
+  const eff = info.lowerBetter ? -delta : delta;
+  if (eff >= info.defaultBuy)  return 'BUY';
+  if (eff <= info.defaultSell) return 'SELL';
+  return 'HOLD';
+}
+
+function runSearch() {
+  const query   = document.getElementById('player-search-input').value.trim().toLowerCase();
+  const hint    = document.getElementById('search-hint');
+  const results = document.getElementById('search-results');
+
+  if (query.length < 2) {
+    results.innerHTML = '';
+    hint.textContent  = 'Type at least 2 characters to search across all hitters and pitchers.';
+    return;
+  }
+
+  const hitterMatches  = HITTERS_DATA.filter(p => p.name.toLowerCase().includes(query));
+  const pitcherMatches = PITCHERS_DATA.filter(p => p.name.toLowerCase().includes(query));
+  const total = hitterMatches.length + pitcherMatches.length;
+
+  hint.textContent = total === 0
+    ? `No players found for "${query}".`
+    : `${total} player${total !== 1 ? 's' : ''} found.`;
+
+  if (total === 0) { results.innerHTML = ''; return; }
+
+  function buildCard(player, type) {
+    const statInfoMap = type === 'hitter' ? HITTER_STAT_INFO : PITCHER_STAT_INFO;
+    const teamIds     = type === 'hitter' ? TEAM_HITTER_IDS  : TEAM_PITCHER_IDS;
+    const isMyTeam    = teamIds.has(String(player.player_id));
+    const typeBadge   = `<span class="player-type-badge">${type}</span>`;
+    const teamBadge   = isMyTeam ? `<span class="my-team-badge">★ My Team</span>` : '';
+
+    let rows = '';
+    for (const [stat, info] of Object.entries(statInfoMap)) {
+      if (!player.stats[stat]) continue;
+      const { pre, cur }  = player.stats[stat];
+      const delta         = cur - pre;
+      const sign          = delta >= 0 ? '+' : '';
+      const deltaCls      = delta >= 0 ? 'pos' : 'neg';
+      const signal        = getSignal(delta, info);
+      rows += `<tr>
+        <td class="team" style="font-size:12px;font-family:'DM Mono',monospace">${stat}</td>
+        <td class="num">${pre.toFixed(info.decimals)}</td>
+        <td class="num">${cur.toFixed(info.decimals)}</td>
+        <td class="delta ${deltaCls}">${sign}${delta.toFixed(info.decimals)}</td>
+        <td><span class="signal-pill ${signal}">${signal}</span></td>
+      </tr>`;
+    }
+
+    return `<div class="player-card${isMyTeam ? ' my-team' : ''}">
+      <div class="player-card-header">
+        <span class="player-card-name">${player.name}</span>
+        <span class="player-card-team">${player.team}</span>
+        ${typeBadge}${teamBadge}
+      </div>
+      <table>
+        <thead><tr>
+          <th>Stat</th>
+          <th style="text-align:right">Preseason</th>
+          <th style="text-align:right">Current</th>
+          <th style="text-align:right">Change</th>
+          <th>Signal</th>
+        </tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+    </div>`;
+  }
+
+  let html = '';
+  hitterMatches.forEach(p  => { html += buildCard(p, 'hitter'); });
+  pitcherMatches.forEach(p => { html += buildCard(p, 'pitcher'); });
+  results.innerHTML = html;
 }
 
 function updateAnalysis(pos) {

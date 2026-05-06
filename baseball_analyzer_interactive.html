@@ -393,7 +393,7 @@ function calculateAndDisplay(data, stat, info, buyThreshold, sellThreshold, pref
 
   const counts = { BUY: 0, SELL: 0, HOLD: 0 };
   results.forEach(r => counts[r.signal]++);
-  document.getElementById(`${prefix}-sum-total`).textContent = results.length;
+  document.getElementById(`${prefix[0]}-sum-total`).textContent = results.length;
   document.getElementById(`${prefix[0]}-sum-buy`).textContent  = counts.BUY;
   document.getElementById(`${prefix[0]}-sum-sell`).textContent = counts.SELL;
   document.getElementById(`${prefix[0]}-sum-hold`).textContent = counts.HOLD;

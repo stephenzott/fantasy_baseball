@@ -290,15 +290,27 @@ def build_embed_data(pre_csv: str, cur_csv: str, pos: str, stats: list, fetch_po
     return players
 
 
+def _load_team_ids(csv_path: str) -> set:
+    """Return set of player_id strings from a team CSV (columns: player_id, name)."""
+    try:
+        df = pd.read_csv(csv_path, dtype=str)
+        col = next((c for c in df.columns if c.lower() in ("player_id", "playerid")), None)
+        return set(df[col].dropna().tolist()) if col else set()
+    except Exception:
+        return set()
+
+
 def generate_html(
-    hitter_pre_csv:  str,
-    hitter_cur_csv:  str,
-    pitcher_pre_csv: str,
-    pitcher_cur_csv: str,
-    output_file: str = "baseball_analyzer_interactive.html",
-    subtitle: str    = None,
+    hitter_pre_csv:   str,
+    hitter_cur_csv:   str,
+    pitcher_pre_csv:  str,
+    pitcher_cur_csv:  str,
+    team_hitters_csv: str = "team_hitters.csv",
+    team_pitchers_csv: str = "team_pitchers.csv",
+    output_file: str  = "baseball_analyzer_interactive.html",
+    subtitle: str     = None,
 ) -> None:
-    """Generate a self-contained two-tab HTML analyzer with embedded JSON data."""
+    """Generate a self-contained three-tab HTML analyzer with embedded JSON data."""
     import json, datetime
 
     print("Building hitter data (fetching positions from MLB API)...")
@@ -306,8 +318,14 @@ def generate_html(
     print("Building pitcher data (computing SP/RP from GS)...")
     pitchers = build_embed_data(pitcher_pre_csv, pitcher_cur_csv, "pitcher", PITCHER_EMBED_STATS, pos_from_gs=True)
 
-    hitters_json  = json.dumps(hitters,  separators=(',', ':'))
-    pitchers_json = json.dumps(pitchers, separators=(',', ':'))
+    team_hitter_ids  = _load_team_ids(team_hitters_csv)
+    team_pitcher_ids = _load_team_ids(team_pitchers_csv)
+    print(f"  Team hitters: {len(team_hitter_ids)} | Team pitchers: {len(team_pitcher_ids)}")
+
+    hitters_json       = json.dumps(hitters,  separators=(',', ':'))
+    pitchers_json      = json.dumps(pitchers, separators=(',', ':'))
+    team_hitter_ids_js  = json.dumps(sorted(team_hitter_ids))
+    team_pitcher_ids_js = json.dumps(sorted(team_pitcher_ids))
 
     today = datetime.date.today().strftime("%B %-d, %Y")
     sub   = subtitle or f"Preseason vs Current ({today}) · Interactive Thresholds"
@@ -532,6 +550,82 @@ def generate_html(
   .signal-pill.BUY  {{ background: var(--buy-bg);  color: var(--buy);  border: 1px solid rgba(34,201,122,0.25); }}
   .signal-pill.SELL {{ background: var(--sell-bg); color: var(--sell); border: 1px solid rgba(240,64,96,0.25); }}
   .signal-pill.HOLD {{ background: var(--hold-bg); color: var(--hold); border: 1px solid rgba(240,160,48,0.25); }}
+
+  .my-team-section table {{ background: transparent; border: none; }}
+  .my-team-section thead {{ background: rgba(79,143,255,0.06); }}
+  .my-team-section tbody tr:hover {{ background: rgba(79,143,255,0.08); }}
+  tr.my-team-row td.name::after {{ content: ' ★'; color: var(--accent); font-size: 11px; }}
+
+  .search-box {{
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 24px;
+  }}
+  .search-input {{
+    width: 100%;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 15px;
+    padding: 12px 16px;
+    border-radius: 6px;
+    outline: none;
+    transition: border-color 0.2s;
+  }}
+  .search-input:focus {{ border-color: var(--accent); }}
+  .search-input::placeholder {{ color: var(--muted); }}
+  .search-hint {{
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+    margin-top: 10px;
+  }}
+  .player-cards {{ display: flex; flex-direction: column; gap: 16px; }}
+  .player-card {{
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+  }}
+  .player-card.my-team {{ border-color: rgba(79,143,255,0.35); }}
+  .player-card-header {{
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 18px;
+    border-bottom: 1px solid var(--border);
+    background: rgba(255,255,255,0.02);
+  }}
+  .player-card-name {{ font-weight: 500; font-size: 15px; color: var(--text); flex: 1; }}
+  .player-card-team {{ font-family: 'DM Mono', monospace; font-size: 11px; color: var(--muted); }}
+  .player-type-badge {{
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 1px;
+    padding: 3px 8px;
+    border-radius: 4px;
+    text-transform: uppercase;
+    background: rgba(79,143,255,0.1);
+    color: var(--accent);
+    border: 1px solid rgba(79,143,255,0.2);
+  }}
+  .my-team-badge {{
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 1px;
+    padding: 3px 8px;
+    border-radius: 4px;
+    text-transform: uppercase;
+    background: rgba(79,143,255,0.15);
+    color: var(--accent);
+    border: 1px solid rgba(79,143,255,0.3);
+  }}
+  .player-card table {{ background: transparent; border: none; border-radius: 0; }}
+  .player-card thead {{ background: rgba(255,255,255,0.015); }}
+  .player-card tbody tr:last-child {{ border-bottom: none; }}
 </style>
 </head>
 <body>
@@ -546,6 +640,7 @@ def generate_html(
   <div class="tabs">
     <button class="tab-btn active" onclick="switchTab('hitters')">Hitters</button>
     <button class="tab-btn" onclick="switchTab('pitchers')">Pitchers</button>
+    <button class="tab-btn" onclick="switchTab('search')">Player Search</button>
   </div>
 
   <!-- HITTER SECTION -->
@@ -638,11 +733,23 @@ def generate_html(
     <div id="pitcher-content"></div>
   </div>
 
+  <!-- SEARCH SECTION -->
+  <div id="search-section" style="display:none">
+    <div class="search-box">
+      <input class="search-input" id="player-search-input" type="text"
+        placeholder="Search by player name…" oninput="runSearch()" autocomplete="off">
+      <div class="search-hint" id="search-hint">Type at least 2 characters to search across all hitters and pitchers.</div>
+    </div>
+    <div class="player-cards" id="search-results"></div>
+  </div>
+
 </div>
 
 <script>
 const HITTERS_DATA = {hitters_json};
 const PITCHERS_DATA = {pitchers_json};
+const TEAM_HITTER_IDS  = new Set({team_hitter_ids_js});
+const TEAM_PITCHER_IDS = new Set({team_pitcher_ids_js});
 
 const HITTER_STAT_INFO = {{
   'HR':  {{ label: 'Home Runs',           decimals: 0, defaultBuy: 3,     defaultSell: -3,     step: '0.5',  lowerBetter: false }},
@@ -665,11 +772,92 @@ let activeTab = 'hitters';
 
 function switchTab(tab) {{
   activeTab = tab;
-  document.getElementById('hitter-section').style.display = tab === 'hitters' ? '' : 'none';
+  document.getElementById('hitter-section').style.display  = tab === 'hitters'  ? '' : 'none';
   document.getElementById('pitcher-section').style.display = tab === 'pitchers' ? '' : 'none';
+  document.getElementById('search-section').style.display  = tab === 'search'   ? '' : 'none';
+  const tabs = ['hitters', 'pitchers', 'search'];
   document.querySelectorAll('.tab-btn').forEach((btn, i) => {{
-    btn.classList.toggle('active', (i === 0) === (tab === 'hitters'));
+    btn.classList.toggle('active', tabs[i] === tab);
   }});
+  if (tab === 'search') document.getElementById('player-search-input').focus();
+}}
+
+function getSignal(delta, info) {{
+  const eff = info.lowerBetter ? -delta : delta;
+  if (eff >= info.defaultBuy)  return 'BUY';
+  if (eff <= info.defaultSell) return 'SELL';
+  return 'HOLD';
+}}
+
+function runSearch() {{
+  const query   = document.getElementById('player-search-input').value.trim().toLowerCase();
+  const hint    = document.getElementById('search-hint');
+  const results = document.getElementById('search-results');
+
+  if (query.length < 2) {{
+    results.innerHTML = '';
+    hint.textContent  = 'Type at least 2 characters to search across all hitters and pitchers.';
+    return;
+  }}
+
+  const hitterMatches  = HITTERS_DATA.filter(p => p.name.toLowerCase().includes(query));
+  const pitcherMatches = PITCHERS_DATA.filter(p => p.name.toLowerCase().includes(query));
+  const total = hitterMatches.length + pitcherMatches.length;
+
+  hint.textContent = total === 0
+    ? `No players found for "${{query}}".`
+    : `${{total}} player${{total !== 1 ? 's' : ''}} found.`;
+
+  if (total === 0) {{ results.innerHTML = ''; return; }}
+
+  function buildCard(player, type) {{
+    const statInfoMap = type === 'hitter' ? HITTER_STAT_INFO : PITCHER_STAT_INFO;
+    const teamIds     = type === 'hitter' ? TEAM_HITTER_IDS  : TEAM_PITCHER_IDS;
+    const isMyTeam    = teamIds.has(String(player.player_id));
+    const typeBadge   = `<span class="player-type-badge">${{type}}</span>`;
+    const teamBadge   = isMyTeam ? `<span class="my-team-badge">★ My Team</span>` : '';
+    const posLabel    = player.pos ? `<span class="player-card-team" style="margin-left:4px">${{player.pos}}</span>` : '';
+
+    let rows = '';
+    for (const [stat, info] of Object.entries(statInfoMap)) {{
+      if (!player.stats[stat]) continue;
+      const {{ pre, cur }} = player.stats[stat];
+      const delta  = cur - pre;
+      const sign   = delta >= 0 ? '+' : '';
+      const cls    = delta >= 0 ? 'pos' : 'neg';
+      const signal = getSignal(delta, info);
+      rows += `<tr>
+        <td class="team" style="font-size:12px;font-family:'DM Mono',monospace">${{stat}}</td>
+        <td class="num">${{pre.toFixed(info.decimals)}}</td>
+        <td class="num">${{cur.toFixed(info.decimals)}}</td>
+        <td class="delta ${{cls}}">${{sign}}${{delta.toFixed(info.decimals)}}</td>
+        <td><span class="signal-pill ${{signal}}">${{signal}}</span></td>
+      </tr>`;
+    }}
+
+    return `<div class="player-card${{isMyTeam ? ' my-team' : ''}}">
+      <div class="player-card-header">
+        <span class="player-card-name">${{player.name}}</span>
+        <span class="player-card-team">${{player.team}}</span>
+        ${{posLabel}}${{typeBadge}}${{teamBadge}}
+      </div>
+      <table>
+        <thead><tr>
+          <th>Stat</th>
+          <th style="text-align:right">Preseason</th>
+          <th style="text-align:right">Current</th>
+          <th style="text-align:right">Change</th>
+          <th>Signal</th>
+        </tr></thead>
+        <tbody>${{rows}}</tbody>
+      </table>
+    </div>`;
+  }}
+
+  let html = '';
+  hitterMatches.forEach(p  => {{ html += buildCard(p, 'hitter'); }});
+  pitcherMatches.forEach(p => {{ html += buildCard(p, 'pitcher'); }});
+  results.innerHTML = html;
 }}
 
 function updateAnalysis(pos) {{
@@ -681,7 +869,7 @@ function updateAnalysis(pos) {{
     const posFilter = document.getElementById('h-pos-filter').value;
     document.getElementById('h-buy-threshold').step  = info.step;
     document.getElementById('h-sell-threshold').step = info.step;
-    calculateAndDisplay(HITTERS_DATA, stat, info, buy, sell, 'hitter', posFilter);
+    calculateAndDisplay(HITTERS_DATA, stat, info, buy, sell, 'hitter', TEAM_HITTER_IDS, posFilter);
   }} else {{
     const stat      = document.getElementById('p-stat-select').value;
     const info      = PITCHER_STAT_INFO[stat];
@@ -690,36 +878,37 @@ function updateAnalysis(pos) {{
     const posFilter = document.getElementById('p-pos-filter').value;
     document.getElementById('p-buy-threshold').step  = info.step;
     document.getElementById('p-sell-threshold').step = info.step;
-    calculateAndDisplay(PITCHERS_DATA, stat, info, buy, sell, 'pitcher', posFilter);
+    calculateAndDisplay(PITCHERS_DATA, stat, info, buy, sell, 'pitcher', TEAM_PITCHER_IDS, posFilter);
   }}
 }}
 
-function calculateAndDisplay(data, stat, info, buyThreshold, sellThreshold, prefix, posFilter) {{
+function calculateAndDisplay(data, stat, info, buyThreshold, sellThreshold, prefix, teamIds, posFilter) {{
   const decimals = info.decimals;
-  const results = [];
+  const results  = [];
 
   data.forEach(player => {{
     if (!player.stats[stat]) return;
     if (posFilter && !(player.pos || '').includes(posFilter)) return;
-    const pre   = player.stats[stat].pre;
-    const cur   = player.stats[stat].cur;
-    const delta = cur - pre;
-    const eff   = info.lowerBetter ? -delta : delta;
+    const pre      = player.stats[stat].pre;
+    const cur      = player.stats[stat].cur;
+    const delta    = cur - pre;
+    const eff      = info.lowerBetter ? -delta : delta;
+    const isMyTeam = teamIds ? teamIds.has(String(player.player_id)) : false;
 
     let signal;
-    if (eff >= buyThreshold)  signal = 'BUY';
+    if (eff >= buyThreshold)       signal = 'BUY';
     else if (eff <= sellThreshold) signal = 'SELL';
     else                           signal = 'HOLD';
 
-    results.push({{ name: player.name, team: player.team, pos: player.pos || '', pre, cur, delta, signal }});
+    results.push({{ name: player.name, team: player.team, pos: player.pos || '', player_id: player.player_id, pre, cur, delta, signal, isMyTeam }});
   }});
 
   const counts = {{ BUY: 0, SELL: 0, HOLD: 0 }};
   results.forEach(r => counts[r.signal]++);
   document.getElementById(`${{prefix[0]}}-sum-total`).textContent = results.length;
-  document.getElementById(`${{prefix[0]}}-sum-buy`).textContent  = counts.BUY;
-  document.getElementById(`${{prefix[0]}}-sum-sell`).textContent = counts.SELL;
-  document.getElementById(`${{prefix[0]}}-sum-hold`).textContent = counts.HOLD;
+  document.getElementById(`${{prefix[0]}}-sum-buy`).textContent   = counts.BUY;
+  document.getElementById(`${{prefix[0]}}-sum-sell`).textContent  = counts.SELL;
+  document.getElementById(`${{prefix[0]}}-sum-hold`).textContent  = counts.HOLD;
   document.getElementById('generated-date').textContent =
     `Generated: ${{new Date().toLocaleDateString('en-US', {{ month: 'short', day: 'numeric', year: 'numeric' }})}}`;
 
@@ -728,62 +917,60 @@ function calculateAndDisplay(data, stat, info, buyThreshold, sellThreshold, pref
   const sells = results.filter(r => r.signal === 'SELL').sort((a, b) =>
     info.lowerBetter ? b.delta - a.delta : a.delta - b.delta);
 
-  const buyLabel  = info.lowerBetter ? 'Improving' : 'Trending Up';
-  const sellLabel = info.lowerBetter ? 'Declining'  : 'Trending Down';
+  const buyLabel  = info.lowerBetter ? 'Improving'     : 'Trending Up';
+  const sellLabel = info.lowerBetter ? 'Declining'     : 'Trending Down';
+
+  const tableHead = `<table>
+        <thead><tr>
+          <th>Player</th><th>Team</th><th>Pos</th>
+          <th style="text-align:right">Preseason</th>
+          <th style="text-align:right">Current</th>
+          <th style="text-align:right">Change</th>
+          <th>Signal</th>
+        </tr></thead><tbody>`;
+
+  function buildRow(r, signal) {{
+    const sign    = r.delta >= 0 ? '+' : '';
+    const cls     = r.delta >= 0 ? 'pos' : 'neg';
+    const teamCls = r.isMyTeam ? ' my-team-row' : '';
+    return `<tr class="${{teamCls}}">
+        <td class="name">${{r.name}}</td>
+        <td class="team">${{r.team}}</td>
+        <td class="team">${{r.pos}}</td>
+        <td class="num">${{r.pre.toFixed(decimals)}}</td>
+        <td class="num">${{r.cur.toFixed(decimals)}}</td>
+        <td class="delta ${{cls}}">${{sign}}${{r.delta.toFixed(decimals)}}</td>
+        <td><span class="signal-pill ${{signal}}">${{signal}}</span></td>
+      </tr>`;
+  }}
 
   let html = '';
 
-  if (buys.length > 0) {{
-    html += `
-      <div class="section-title">🔥 Buy Signals (${{buys.length}}) — ${{info.label}} ${{buyLabel}}</div>
-      <table>
-        <thead><tr>
-          <th>Player</th><th>Team</th><th>Pos</th>
-          <th style="text-align:right">Preseason</th>
-          <th style="text-align:right">Current</th>
-          <th style="text-align:right">Change</th>
-          <th>Signal</th>
-        </tr></thead><tbody>`;
-    buys.forEach(r => {{
-      const sign = r.delta >= 0 ? '+' : '';
-      const cls  = r.delta >= 0 ? 'pos' : 'neg';
-      html += `<tr>
-        <td class="name">${{r.name}}</td>
-        <td class="team">${{r.team}}</td>
-        <td class="team">${{r.pos}}</td>
-        <td class="num">${{r.pre.toFixed(decimals)}}</td>
-        <td class="num">${{r.cur.toFixed(decimals)}}</td>
-        <td class="delta ${{cls}}">${{sign}}${{r.delta.toFixed(decimals)}}</td>
-        <td><span class="signal-pill BUY">BUY</span></td>
-      </tr>`;
+  const myTeamAlerts = results.filter(r => r.isMyTeam && r.signal !== 'HOLD')
+    .sort((a, b) => {{
+      if (a.signal !== b.signal) return a.signal === 'BUY' ? -1 : 1;
+      return info.lowerBetter ? a.delta - b.delta : b.delta - a.delta;
     }});
-    html += `</tbody></table>`;
+
+  if (myTeamAlerts.length > 0) {{
+    html += `<div class="my-team-section">
+      <div class="section-title">⭐ My Team Alerts (${{myTeamAlerts.length}}) — ${{info.label}}</div>
+      ${{tableHead}}`;
+    myTeamAlerts.forEach(r => {{ html += buildRow(r, r.signal); }});
+    html += `</tbody></table></div>`;
   }}
 
   if (sells.length > 0) {{
-    html += `
-      <div class="section-title">📉 Sell Signals (${{sells.length}}) — ${{info.label}} ${{sellLabel}}</div>
-      <table>
-        <thead><tr>
-          <th>Player</th><th>Team</th><th>Pos</th>
-          <th style="text-align:right">Preseason</th>
-          <th style="text-align:right">Current</th>
-          <th style="text-align:right">Change</th>
-          <th>Signal</th>
-        </tr></thead><tbody>`;
-    sells.forEach(r => {{
-      const sign = r.delta >= 0 ? '+' : '';
-      const cls  = r.delta >= 0 ? 'pos' : 'neg';
-      html += `<tr>
-        <td class="name">${{r.name}}</td>
-        <td class="team">${{r.team}}</td>
-        <td class="team">${{r.pos}}</td>
-        <td class="num">${{r.pre.toFixed(decimals)}}</td>
-        <td class="num">${{r.cur.toFixed(decimals)}}</td>
-        <td class="delta ${{cls}}">${{sign}}${{r.delta.toFixed(decimals)}}</td>
-        <td><span class="signal-pill SELL">SELL</span></td>
-      </tr>`;
-    }});
+    html += `<div class="section-title">📉 Sell Signals (${{sells.length}}) — ${{info.label}} ${{sellLabel}}</div>
+      ${{tableHead}}`;
+    sells.forEach(r => {{ html += buildRow(r, 'SELL'); }});
+    html += `</tbody></table>`;
+  }}
+
+  if (buys.length > 0) {{
+    html += `<div class="section-title">🔥 Buy Signals (${{buys.length}}) — ${{info.label}} ${{buyLabel}}</div>
+      ${{tableHead}}`;
+    buys.forEach(r => {{ html += buildRow(r, 'BUY'); }});
     html += `</tbody></table>`;
   }}
 

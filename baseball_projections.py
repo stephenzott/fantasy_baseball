@@ -203,7 +203,32 @@ def run(
 # 6. HTML generation
 # ---------------------------------------------------------------------------
 
-def build_embed_data(pre_csv: str, cur_csv: str, pos: str, stats: list) -> list:
+_OF_POSITIONS  = {"LF", "CF", "RF"}
+_DH_POSITIONS  = {"TWP"}  # two-way players bat as DH
+
+def fetch_positions(mlbam_ids: list, batch_size: int = 200) -> dict:
+    """Return {mlbam_id_str: position_abbr} via the free MLB Stats API."""
+    import urllib.request
+    result = {}
+    ids = [i for i in mlbam_ids if i and str(i) not in ("", "nan", "0")]
+    for start in range(0, len(ids), batch_size):
+        chunk = ids[start:start + batch_size]
+        url = "https://statsapi.mlb.com/api/v1/people?personIds=" + ",".join(str(i) for i in chunk)
+        with urllib.request.urlopen(url, timeout=15) as resp:
+            import json
+            data = json.loads(resp.read())
+        for person in data.get("people", []):
+            pos = person.get("primaryPosition", {}).get("abbreviation", "")
+            if pos in _OF_POSITIONS:
+                pos = "OF"
+            elif pos in _DH_POSITIONS:
+                pos = "DH"
+            result[str(person["id"])] = pos
+    print(f"  Fetched positions for {len(result)} players from MLB Stats API")
+    return result
+
+
+def build_embed_data(pre_csv: str, cur_csv: str, pos: str, stats: list, fetch_pos: bool = False) -> list:
     """Load two CSVs and return a list of player dicts for HTML embedding."""
     pre = load_csv(pre_csv, pos, label="preseason")
     cur = load_csv(cur_csv, pos, label="current")
@@ -213,10 +238,21 @@ def build_embed_data(pre_csv: str, cur_csv: str, pos: str, stats: list) -> list:
 
     avail_stats = [s for s in stats if s in pre.columns and s in cur.columns]
 
+    # Carry MLBAMID from cur for position lookup (cur has fresher roster data)
+    cur_cols = ["player_id"] + avail_stats
+    if fetch_pos and "MLBAMID" in cur.columns:
+        cur["mlbam_id"] = cur["MLBAMID"].astype(str)
+        cur_cols.append("mlbam_id")
+
     pre_slim = pre[["player_id", "name", "team"] + avail_stats]
-    cur_slim = cur[["player_id"] + avail_stats]
+    cur_slim = cur[cur_cols]
 
     merged = pre_slim.merge(cur_slim, on="player_id", how="inner", suffixes=("_pre", "_cur"))
+
+    position_map = {}
+    if fetch_pos and "mlbam_id" in merged.columns:
+        mlbam_ids = merged["mlbam_id"].dropna().unique().tolist()
+        position_map = fetch_positions(mlbam_ids)
 
     players = []
     for _, row in merged.iterrows():
@@ -227,12 +263,15 @@ def build_embed_data(pre_csv: str, cur_csv: str, pos: str, stats: list) -> list:
             if pd.notna(pre_val) and pd.notna(cur_val):
                 stat_data[stat] = {"pre": round(float(pre_val), 6), "cur": round(float(cur_val), 6)}
         if stat_data:
-            players.append({
+            entry = {
                 "player_id": str(row["player_id"]),
                 "name":      str(row["name"]),
                 "team":      str(row["team"]) if pd.notna(row["team"]) else "",
                 "stats":     stat_data,
-            })
+            }
+            if fetch_pos and "mlbam_id" in row:
+                entry["pos"] = position_map.get(str(row["mlbam_id"]), "")
+            players.append(entry)
     return players
 
 
@@ -247,8 +286,8 @@ def generate_html(
     """Generate a self-contained two-tab HTML analyzer with embedded JSON data."""
     import json, datetime
 
-    print("Building hitter data...")
-    hitters = build_embed_data(hitter_pre_csv, hitter_cur_csv, "hitter", HITTER_EMBED_STATS)
+    print("Building hitter data (fetching positions from MLB API)...")
+    hitters = build_embed_data(hitter_pre_csv, hitter_cur_csv, "hitter", HITTER_EMBED_STATS, fetch_pos=True)
     print("Building pitcher data...")
     pitchers = build_embed_data(pitcher_pre_csv, pitcher_cur_csv, "pitcher", PITCHER_EMBED_STATS)
 
@@ -510,6 +549,19 @@ def generate_html(
           </select>
         </div>
         <div class="control-group">
+          <label for="h-pos-filter">Position</label>
+          <select id="h-pos-filter" onchange="updateAnalysis('hitter')">
+            <option value="">All</option>
+            <option value="C">C</option>
+            <option value="1B">1B</option>
+            <option value="2B">2B</option>
+            <option value="3B">3B</option>
+            <option value="SS">SS</option>
+            <option value="OF">OF</option>
+            <option value="DH">DH</option>
+          </select>
+        </div>
+        <div class="control-group">
           <label for="h-buy-threshold">Buy Threshold ≥</label>
           <input type="number" id="h-buy-threshold" value="3" step="0.5" onchange="updateAnalysis('hitter')">
         </div>
@@ -599,13 +651,14 @@ function switchTab(tab) {{
 
 function updateAnalysis(pos) {{
   if (pos === 'hitter') {{
-    const stat = document.getElementById('h-stat-select').value;
-    const info = HITTER_STAT_INFO[stat];
-    const buy  = parseFloat(document.getElementById('h-buy-threshold').value);
-    const sell = parseFloat(document.getElementById('h-sell-threshold').value);
+    const stat      = document.getElementById('h-stat-select').value;
+    const info      = HITTER_STAT_INFO[stat];
+    const buy       = parseFloat(document.getElementById('h-buy-threshold').value);
+    const sell      = parseFloat(document.getElementById('h-sell-threshold').value);
+    const posFilter = document.getElementById('h-pos-filter').value;
     document.getElementById('h-buy-threshold').step  = info.step;
     document.getElementById('h-sell-threshold').step = info.step;
-    calculateAndDisplay(HITTERS_DATA, stat, info, buy, sell, 'hitter');
+    calculateAndDisplay(HITTERS_DATA, stat, info, buy, sell, 'hitter', posFilter);
   }} else {{
     const stat = document.getElementById('p-stat-select').value;
     const info = PITCHER_STAT_INFO[stat];
@@ -613,16 +666,17 @@ function updateAnalysis(pos) {{
     const sell = parseFloat(document.getElementById('p-sell-threshold').value);
     document.getElementById('p-buy-threshold').step  = info.step;
     document.getElementById('p-sell-threshold').step = info.step;
-    calculateAndDisplay(PITCHERS_DATA, stat, info, buy, sell, 'pitcher');
+    calculateAndDisplay(PITCHERS_DATA, stat, info, buy, sell, 'pitcher', '');
   }}
 }}
 
-function calculateAndDisplay(data, stat, info, buyThreshold, sellThreshold, prefix) {{
+function calculateAndDisplay(data, stat, info, buyThreshold, sellThreshold, prefix, posFilter) {{
   const decimals = info.decimals;
   const results = [];
 
   data.forEach(player => {{
     if (!player.stats[stat]) return;
+    if (posFilter && player.pos !== posFilter) return;
     const pre   = player.stats[stat].pre;
     const cur   = player.stats[stat].cur;
     const delta = cur - pre;
@@ -633,7 +687,7 @@ function calculateAndDisplay(data, stat, info, buyThreshold, sellThreshold, pref
     else if (eff <= sellThreshold) signal = 'SELL';
     else                           signal = 'HOLD';
 
-    results.push({{ name: player.name, team: player.team, pre, cur, delta, signal }});
+    results.push({{ name: player.name, team: player.team, pos: player.pos || '', pre, cur, delta, signal }});
   }});
 
   const counts = {{ BUY: 0, SELL: 0, HOLD: 0 }};
@@ -660,7 +714,7 @@ function calculateAndDisplay(data, stat, info, buyThreshold, sellThreshold, pref
       <div class="section-title">🔥 Buy Signals (${{buys.length}}) — ${{info.label}} ${{buyLabel}}</div>
       <table>
         <thead><tr>
-          <th>Player</th><th>Team</th>
+          <th>Player</th><th>Team</th><th>Pos</th>
           <th style="text-align:right">Preseason</th>
           <th style="text-align:right">Current</th>
           <th style="text-align:right">Change</th>
@@ -672,6 +726,7 @@ function calculateAndDisplay(data, stat, info, buyThreshold, sellThreshold, pref
       html += `<tr>
         <td class="name">${{r.name}}</td>
         <td class="team">${{r.team}}</td>
+        <td class="team">${{r.pos}}</td>
         <td class="num">${{r.pre.toFixed(decimals)}}</td>
         <td class="num">${{r.cur.toFixed(decimals)}}</td>
         <td class="delta ${{cls}}">${{sign}}${{r.delta.toFixed(decimals)}}</td>
@@ -686,7 +741,7 @@ function calculateAndDisplay(data, stat, info, buyThreshold, sellThreshold, pref
       <div class="section-title">📉 Sell Signals (${{sells.length}}) — ${{info.label}} ${{sellLabel}}</div>
       <table>
         <thead><tr>
-          <th>Player</th><th>Team</th>
+          <th>Player</th><th>Team</th><th>Pos</th>
           <th style="text-align:right">Preseason</th>
           <th style="text-align:right">Current</th>
           <th style="text-align:right">Change</th>
@@ -698,6 +753,7 @@ function calculateAndDisplay(data, stat, info, buyThreshold, sellThreshold, pref
       html += `<tr>
         <td class="name">${{r.name}}</td>
         <td class="team">${{r.team}}</td>
+        <td class="team">${{r.pos}}</td>
         <td class="num">${{r.pre.toFixed(decimals)}}</td>
         <td class="num">${{r.cur.toFixed(decimals)}}</td>
         <td class="delta ${{cls}}">${{sign}}${{r.delta.toFixed(decimals)}}</td>

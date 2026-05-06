@@ -228,7 +228,7 @@ def fetch_positions(mlbam_ids: list, batch_size: int = 200) -> dict:
     return result
 
 
-def build_embed_data(pre_csv: str, cur_csv: str, pos: str, stats: list, fetch_pos: bool = False) -> list:
+def build_embed_data(pre_csv: str, cur_csv: str, pos: str, stats: list, fetch_pos: bool = False, pos_from_gs: bool = False) -> list:
     """Load two CSVs and return a list of player dicts for HTML embedding."""
     pre = load_csv(pre_csv, pos, label="preseason")
     cur = load_csv(cur_csv, pos, label="current")
@@ -243,6 +243,12 @@ def build_embed_data(pre_csv: str, cur_csv: str, pos: str, stats: list, fetch_po
     if fetch_pos and "MLBAMID" in cur.columns:
         cur["mlbam_id"] = cur["MLBAMID"].astype(str)
         cur_cols.append("mlbam_id")
+
+    # Carry G and GS for pitcher SP/RP classification
+    if pos_from_gs:
+        for col in ("G", "GS"):
+            if col in cur.columns and col not in cur_cols:
+                cur_cols.append(col)
 
     pre_slim = pre[["player_id", "name", "team"] + avail_stats]
     cur_slim = cur[cur_cols]
@@ -271,6 +277,15 @@ def build_embed_data(pre_csv: str, cur_csv: str, pos: str, stats: list, fetch_po
             }
             if fetch_pos and "mlbam_id" in row:
                 entry["pos"] = position_map.get(str(row["mlbam_id"]), "")
+            if pos_from_gs:
+                gs = float(row.get("GS") or 0)
+                g  = float(row.get("G")  or 0)
+                sp = gs >= 5
+                rp = (g - gs) >= 5
+                if sp and rp: entry["pos"] = "SP/RP"
+                elif sp:      entry["pos"] = "SP"
+                elif rp:      entry["pos"] = "RP"
+                else:         entry["pos"] = ""
             players.append(entry)
     return players
 
@@ -288,8 +303,8 @@ def generate_html(
 
     print("Building hitter data (fetching positions from MLB API)...")
     hitters = build_embed_data(hitter_pre_csv, hitter_cur_csv, "hitter", HITTER_EMBED_STATS, fetch_pos=True)
-    print("Building pitcher data...")
-    pitchers = build_embed_data(pitcher_pre_csv, pitcher_cur_csv, "pitcher", PITCHER_EMBED_STATS)
+    print("Building pitcher data (computing SP/RP from GS)...")
+    pitchers = build_embed_data(pitcher_pre_csv, pitcher_cur_csv, "pitcher", PITCHER_EMBED_STATS, pos_from_gs=True)
 
     hitters_json  = json.dumps(hitters,  separators=(',', ':'))
     pitchers_json = json.dumps(pitchers, separators=(',', ':'))
@@ -596,6 +611,14 @@ def generate_html(
           </select>
         </div>
         <div class="control-group">
+          <label for="p-pos-filter">Position</label>
+          <select id="p-pos-filter" onchange="updateAnalysis('pitcher')">
+            <option value="">All</option>
+            <option value="SP">SP</option>
+            <option value="RP">RP</option>
+          </select>
+        </div>
+        <div class="control-group">
           <label for="p-buy-threshold">Buy Threshold ≥</label>
           <input type="number" id="p-buy-threshold" value="1" step="0.5" onchange="updateAnalysis('pitcher')">
         </div>
@@ -660,13 +683,14 @@ function updateAnalysis(pos) {{
     document.getElementById('h-sell-threshold').step = info.step;
     calculateAndDisplay(HITTERS_DATA, stat, info, buy, sell, 'hitter', posFilter);
   }} else {{
-    const stat = document.getElementById('p-stat-select').value;
-    const info = PITCHER_STAT_INFO[stat];
-    const buy  = parseFloat(document.getElementById('p-buy-threshold').value);
-    const sell = parseFloat(document.getElementById('p-sell-threshold').value);
+    const stat      = document.getElementById('p-stat-select').value;
+    const info      = PITCHER_STAT_INFO[stat];
+    const buy       = parseFloat(document.getElementById('p-buy-threshold').value);
+    const sell      = parseFloat(document.getElementById('p-sell-threshold').value);
+    const posFilter = document.getElementById('p-pos-filter').value;
     document.getElementById('p-buy-threshold').step  = info.step;
     document.getElementById('p-sell-threshold').step = info.step;
-    calculateAndDisplay(PITCHERS_DATA, stat, info, buy, sell, 'pitcher', '');
+    calculateAndDisplay(PITCHERS_DATA, stat, info, buy, sell, 'pitcher', posFilter);
   }}
 }}
 
@@ -676,7 +700,7 @@ function calculateAndDisplay(data, stat, info, buyThreshold, sellThreshold, pref
 
   data.forEach(player => {{
     if (!player.stats[stat]) return;
-    if (posFilter && player.pos !== posFilter) return;
+    if (posFilter && !(player.pos || '').includes(posFilter)) return;
     const pre   = player.stats[stat].pre;
     const cur   = player.stats[stat].cur;
     const delta = cur - pre;

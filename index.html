@@ -218,6 +218,24 @@
   .signal-pill.BUY  { background: var(--buy-bg);  color: var(--buy);  border: 1px solid rgba(34,201,122,0.25); }
   .signal-pill.SELL { background: var(--sell-bg); color: var(--sell); border: 1px solid rgba(240,64,96,0.25); }
   .signal-pill.HOLD { background: var(--hold-bg); color: var(--hold); border: 1px solid rgba(240,160,48,0.25); }
+
+  .my-team-section {
+    background: rgba(79,143,255,0.06);
+    border: 1px solid rgba(79,143,255,0.25);
+    border-radius: 8px;
+    padding: 16px;
+    margin-bottom: 24px;
+  }
+  .my-team-section .section-title { margin-top: 0; color: var(--accent); }
+  .my-team-section table { background: transparent; border: none; }
+  .my-team-section thead { background: rgba(79,143,255,0.06); }
+  .my-team-section tbody tr:hover { background: rgba(79,143,255,0.08); }
+
+  tr.my-team-row td.name::after {
+    content: ' ★';
+    color: var(--accent);
+    font-size: 11px;
+  }
 </style>
 </head>
 <body>
@@ -326,6 +344,9 @@ const PITCHER_STAT_INFO = {
   'WHIP': { label: 'WHIP',         decimals: 3, defaultBuy: 0.05, defaultSell: -0.05, step: '0.01', lowerBetter: true  },
 };
 
+const TEAM_HITTER_IDS = new Set(['19197','14344','12533','20437','15491','19608','17350','22542','23697','23401','12856','31812','16578','23003','21711','27790','12552','33266']);
+const TEAM_PITCHER_IDS = new Set(['31843','19374','17295','13649','27470','10233','31757','13892','17722','21052','21483','26253']);
+
 let activeTab = 'hitters';
 
 function switchTab(tab) {
@@ -345,7 +366,7 @@ function updateAnalysis(pos) {
     const sell = parseFloat(document.getElementById('h-sell-threshold').value);
     document.getElementById('h-buy-threshold').step  = info.step;
     document.getElementById('h-sell-threshold').step = info.step;
-    calculateAndDisplay(HITTERS_DATA, stat, info, buy, sell, 'hitter');
+    calculateAndDisplay(HITTERS_DATA, stat, info, buy, sell, 'hitter', TEAM_HITTER_IDS);
   } else {
     const stat = document.getElementById('p-stat-select').value;
     const info = PITCHER_STAT_INFO[stat];
@@ -353,27 +374,28 @@ function updateAnalysis(pos) {
     const sell = parseFloat(document.getElementById('p-sell-threshold').value);
     document.getElementById('p-buy-threshold').step  = info.step;
     document.getElementById('p-sell-threshold').step = info.step;
-    calculateAndDisplay(PITCHERS_DATA, stat, info, buy, sell, 'pitcher');
+    calculateAndDisplay(PITCHERS_DATA, stat, info, buy, sell, 'pitcher', TEAM_PITCHER_IDS);
   }
 }
 
-function calculateAndDisplay(data, stat, info, buyThreshold, sellThreshold, prefix) {
+function calculateAndDisplay(data, stat, info, buyThreshold, sellThreshold, prefix, teamIds) {
   const decimals = info.decimals;
   const results = [];
 
   data.forEach(player => {
     if (!player.stats[stat]) return;
-    const pre   = player.stats[stat].pre;
-    const cur   = player.stats[stat].cur;
-    const delta = cur - pre;
-    const eff   = info.lowerBetter ? -delta : delta;
+    const pre      = player.stats[stat].pre;
+    const cur      = player.stats[stat].cur;
+    const delta    = cur - pre;
+    const eff      = info.lowerBetter ? -delta : delta;
+    const isMyTeam = teamIds ? teamIds.has(String(player.player_id)) : false;
 
     let signal;
     if (eff >= buyThreshold)  signal = 'BUY';
     else if (eff <= sellThreshold) signal = 'SELL';
     else                           signal = 'HOLD';
 
-    results.push({ name: player.name, team: player.team, pre, cur, delta, signal });
+    results.push({ name: player.name, team: player.team, pre, cur, delta, signal, isMyTeam });
   });
 
   const counts = { BUY: 0, SELL: 0, HOLD: 0 };
@@ -393,12 +415,21 @@ function calculateAndDisplay(data, stat, info, buyThreshold, sellThreshold, pref
   const buyLabel  = info.lowerBetter ? 'Improving' : 'Trending Up';
   const sellLabel = info.lowerBetter ? 'Declining'  : 'Trending Down';
 
-  let html = '';
+  function buildRow(r, signal) {
+    const sign     = r.delta >= 0 ? '+' : '';
+    const cls      = r.delta >= 0 ? 'pos' : 'neg';
+    const teamCls  = r.isMyTeam ? ' my-team-row' : '';
+    return `<tr class="${teamCls}">
+        <td class="name">${r.name}</td>
+        <td class="team">${r.team}</td>
+        <td class="num">${r.pre.toFixed(decimals)}</td>
+        <td class="num">${r.cur.toFixed(decimals)}</td>
+        <td class="delta ${cls}">${sign}${r.delta.toFixed(decimals)}</td>
+        <td><span class="signal-pill ${signal}">${signal}</span></td>
+      </tr>`;
+  }
 
-  if (buys.length > 0) {
-    html += `
-      <div class="section-title">🔥 Buy Signals (${buys.length}) — ${info.label} ${buyLabel}</div>
-      <table>
+  const tableHeader = `<table>
         <thead><tr>
           <th>Player</th><th>Team</th>
           <th style="text-align:right">Preseason</th>
@@ -406,44 +437,36 @@ function calculateAndDisplay(data, stat, info, buyThreshold, sellThreshold, pref
           <th style="text-align:right">Change</th>
           <th>Signal</th>
         </tr></thead><tbody>`;
-    buys.forEach(r => {
-      const sign = r.delta >= 0 ? '+' : '';
-      const cls  = r.delta >= 0 ? 'pos' : 'neg';
-      html += `<tr>
-        <td class="name">${r.name}</td>
-        <td class="team">${r.team}</td>
-        <td class="num">${r.pre.toFixed(decimals)}</td>
-        <td class="num">${r.cur.toFixed(decimals)}</td>
-        <td class="delta ${cls}">${sign}${r.delta.toFixed(decimals)}</td>
-        <td><span class="signal-pill BUY">BUY</span></td>
-      </tr>`;
+
+  let html = '';
+
+  const myTeamAlerts = results.filter(r => r.isMyTeam && r.signal !== 'HOLD')
+    .sort((a, b) => {
+      if (a.signal !== b.signal) return a.signal === 'BUY' ? -1 : 1;
+      return info.lowerBetter ? a.delta - b.delta : b.delta - a.delta;
     });
-    html += `</tbody></table>`;
+
+  if (myTeamAlerts.length > 0) {
+    html += `<div class="my-team-section">
+      <div class="section-title">⭐ My Team Alerts (${myTeamAlerts.length}) — ${info.label}</div>
+      ${tableHeader}`;
+    myTeamAlerts.forEach(r => { html += buildRow(r, r.signal); });
+    html += `</tbody></table></div>`;
   }
 
   if (sells.length > 0) {
     html += `
       <div class="section-title">📉 Sell Signals (${sells.length}) — ${info.label} ${sellLabel}</div>
-      <table>
-        <thead><tr>
-          <th>Player</th><th>Team</th>
-          <th style="text-align:right">Preseason</th>
-          <th style="text-align:right">Current</th>
-          <th style="text-align:right">Change</th>
-          <th>Signal</th>
-        </tr></thead><tbody>`;
-    sells.forEach(r => {
-      const sign = r.delta >= 0 ? '+' : '';
-      const cls  = r.delta >= 0 ? 'pos' : 'neg';
-      html += `<tr>
-        <td class="name">${r.name}</td>
-        <td class="team">${r.team}</td>
-        <td class="num">${r.pre.toFixed(decimals)}</td>
-        <td class="num">${r.cur.toFixed(decimals)}</td>
-        <td class="delta ${cls}">${sign}${r.delta.toFixed(decimals)}</td>
-        <td><span class="signal-pill SELL">SELL</span></td>
-      </tr>`;
-    });
+      ${tableHeader}`;
+    sells.forEach(r => { html += buildRow(r, 'SELL'); });
+    html += `</tbody></table>`;
+  }
+
+  if (buys.length > 0) {
+    html += `
+      <div class="section-title">🔥 Buy Signals (${buys.length}) — ${info.label} ${buyLabel}</div>
+      ${tableHeader}`;
+    buys.forEach(r => { html += buildRow(r, 'BUY'); });
     html += `</tbody></table>`;
   }
 

@@ -338,6 +338,7 @@
     <button class="tab-btn" onclick="switchTab('pitchers')">Pitchers</button>
     <button class="tab-btn" onclick="switchTab('search')">Player Search</button>
     <button class="tab-btn" onclick="switchTab('myteam')">My Team</button>
+    <button class="tab-btn" onclick="switchTab('overall')">Overall</button>
   </div>
 
   <!-- HITTER SECTION -->
@@ -456,6 +457,14 @@
     <div id="targets-container"></div>
   </div>
 
+  <!-- OVERALL SECTION -->
+  <div id="overall-section" style="display:none">
+    <div class="section-title" style="margin-top:0;margin-bottom:16px">Hitters — Sorted by OBP Improvement</div>
+    <div id="overall-hitters-content"></div>
+    <div class="section-title" style="margin-bottom:16px">Pitchers — Sorted by ERA Improvement</div>
+    <div id="overall-pitchers-content"></div>
+  </div>
+
 </div>
 
 <script>
@@ -489,12 +498,14 @@ function switchTab(tab) {
   document.getElementById('pitcher-section').style.display = tab === 'pitchers' ? '' : 'none';
   document.getElementById('search-section').style.display  = tab === 'search'   ? '' : 'none';
   document.getElementById('myteam-section').style.display  = tab === 'myteam'   ? '' : 'none';
-  const tabs = ['hitters', 'pitchers', 'search', 'myteam'];
+  document.getElementById('overall-section').style.display = tab === 'overall'  ? '' : 'none';
+  const tabs = ['hitters', 'pitchers', 'search', 'myteam', 'overall'];
   document.querySelectorAll('.tab-btn').forEach((btn, i) => {
     btn.classList.toggle('active', tabs[i] === tab);
   });
   if (tab === 'search') document.getElementById('player-search-input').focus();
   if (tab === 'myteam') renderMyTeamDashboard();
+  if (tab === 'overall') renderOverallDashboard();
 }
 
 function getSignal(delta, info) {
@@ -883,6 +894,89 @@ function calculateAndDisplay(data, stat, info, buyThreshold, sellThreshold, pref
   }
 
   document.getElementById(`${prefix}-content`).innerHTML = html;
+}
+
+function renderOverallDashboard() {
+  function countBuys(player, statInfoMap) {
+    return Object.keys(statInfoMap).filter(stat => {
+      if (!player.stats[stat]) return false;
+      const info  = statInfoMap[stat];
+      const delta = player.stats[stat].cur - player.stats[stat].pre;
+      const eff   = info.lowerBetter ? -delta : delta;
+      return eff >= info.defaultBuy;
+    }).length;
+  }
+
+  function getBuyStats(player, statInfoMap) {
+    return Object.keys(statInfoMap).filter(stat => {
+      if (!player.stats[stat]) return false;
+      const info  = statInfoMap[stat];
+      const delta = player.stats[stat].cur - player.stats[stat].pre;
+      const eff   = info.lowerBetter ? -delta : delta;
+      return eff >= info.defaultBuy;
+    });
+  }
+
+  function buildOverallTable(rows, keyStatLabel, keyDeltaFn, decimals) {
+    if (!rows.length) return '<p style="color:var(--muted);font-size:13px;padding:12px 0;">No players with buy signals.</p>';
+    let html = `<div style="max-height:480px;overflow-y:auto;border:1px solid var(--border);border-radius:8px;"><table style="border:none;border-radius:0;"><thead style="position:sticky;top:0;z-index:1;background:var(--surface);"><tr>
+      <th>Player</th><th>Team</th><th>Pos</th>
+      <th style="text-align:right">Buys</th>
+      <th style="text-align:right">${keyStatLabel} Pre</th>
+      <th style="text-align:right">${keyStatLabel} Cur</th>
+      <th style="text-align:right">${keyStatLabel} Δ</th>
+      <th>Buy Stats</th>
+    </tr></thead><tbody>`;
+    rows.forEach(r => {
+      const delta = keyDeltaFn(r);
+      const cls   = delta > 0 ? 'pos' : (delta < 0 ? 'neg' : '');
+      const sign  = delta > 0 ? '+' : '';
+      const pills = r.buyStats.map(s => `<span class="signal-pill BUY">${s}</span>`).join(' ');
+      html += `<tr>
+        <td class="name">${r.name}</td>
+        <td class="team">${r.team}</td>
+        <td class="team">${r.pos || ''}</td>
+        <td class="num" style="text-align:right">${r.buys}</td>
+        <td class="num">${r.preVal.toFixed(decimals)}</td>
+        <td class="num">${r.curVal.toFixed(decimals)}</td>
+        <td class="delta ${cls}">${sign}${delta.toFixed(decimals)}</td>
+        <td style="padding-left:10px">${pills}</td>
+      </tr>`;
+    });
+    html += '</tbody></table></div>';
+    return html;
+  }
+
+  // Hitters sorted by OBP delta (cur - pre, desc)
+  const hitterRows = HITTERS_DATA
+    .map(p => ({
+      ...p,
+      buys:    countBuys(p, HITTER_STAT_INFO),
+      buyStats: getBuyStats(p, HITTER_STAT_INFO),
+      preVal:  p.stats['OBP'].pre,
+      curVal:  p.stats['OBP'].cur,
+    }))
+    .filter(p => p.buys > 0)
+    .sort((a, b) => (b.curVal - b.preVal) - (a.curVal - a.preVal))
+    .slice(0, 20);
+
+  // Pitchers sorted by ERA improvement (pre - cur, desc; positive = ERA dropped)
+  const pitcherRows = PITCHERS_DATA
+    .map(p => ({
+      ...p,
+      buys:    countBuys(p, PITCHER_STAT_INFO),
+      buyStats: getBuyStats(p, PITCHER_STAT_INFO),
+      preVal:  p.stats['ERA'].pre,
+      curVal:  p.stats['ERA'].cur,
+    }))
+    .filter(p => p.buys > 0)
+    .sort((a, b) => (b.preVal - b.curVal) - (a.preVal - a.curVal))
+    .slice(0, 20);
+
+  document.getElementById('overall-hitters-content').innerHTML =
+    buildOverallTable(hitterRows, 'OBP', r => r.curVal - r.preVal, 3);
+  document.getElementById('overall-pitchers-content').innerHTML =
+    buildOverallTable(pitcherRows, 'ERA', r => r.preVal - r.curVal, 2);
 }
 
 // Sync stat dropdown changes to reset thresholds

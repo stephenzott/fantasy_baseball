@@ -311,9 +311,12 @@
   .roster-stat-pill .ssig.BUY  { color: var(--buy);  font-weight: 600; }
   .roster-stat-pill .ssig.SELL { color: var(--sell); font-weight: 600; }
   .roster-stat-pill .ssig.HOLD { color: var(--hold); font-weight: 600; }
-  .target-controls { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
-  @media (max-width: 700px) { .target-controls { grid-template-columns: 1fr; } }
-  .target-stat-select { background: var(--surface); border: 1px solid var(--border); color: var(--text); border-radius: 6px; padding: 6px 10px; font-size: 12px; margin-bottom: 12px; width: 100%; }
+  .target-group { margin-bottom: 28px; }
+  .benchmark-row td { color: var(--muted); font-size: 12px; border-bottom: 1px solid var(--border); background: rgba(255,255,255,0.02); }
+  .target-group-header { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; padding-bottom: 8px; border-bottom: 1px solid var(--border); }
+  .target-group-player { font-weight: 500; font-size: 14px; }
+  .target-group-meta { font-family: 'DM Mono', monospace; font-size: 10px; color: var(--muted); }
+  .target-group-sells { font-family: 'DM Mono', monospace; font-size: 10px; color: var(--sell); font-weight: 600; }
   .target-table { width: 100%; border-collapse: collapse; }
   .target-table th { text-align: left; font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 1px; color: var(--muted); text-transform: uppercase; padding: 6px 8px; border-bottom: 1px solid var(--border); }
   .target-table td { padding: 7px 8px; border-bottom: 1px solid var(--border); font-size: 13px; }
@@ -450,31 +453,7 @@
       </div>
     </div>
     <div class="section-title" style="margin-bottom:16px">🎯 Potential Targets</div>
-    <div class="target-controls">
-      <div>
-        <div class="dashboard-col-title">Hitters — Top Pickups</div>
-        <select class="target-stat-select" id="target-h-stat" onchange="renderTargets()">
-          <option value="HR">Home Runs (HR)</option>
-          <option value="R">Runs (R)</option>
-          <option value="RBI">RBI</option>
-          <option value="SB">Stolen Bases (SB)</option>
-          <option value="AVG">Batting Average (AVG)</option>
-          <option value="OBP">On-Base Percentage (OBP)</option>
-        </select>
-        <div id="target-hitters-list"></div>
-      </div>
-      <div>
-        <div class="dashboard-col-title">Pitchers — Top Pickups</div>
-        <select class="target-stat-select" id="target-p-stat" onchange="renderTargets()">
-          <option value="W">Wins (W)</option>
-          <option value="ERA">ERA</option>
-          <option value="K">Strikeouts (K)</option>
-          <option value="K/BB">K/BB Ratio</option>
-          <option value="WHIP">WHIP</option>
-        </select>
-        <div id="target-pitchers-list"></div>
-      </div>
-    </div>
+    <div id="targets-container"></div>
   </div>
 
 </div>
@@ -655,57 +634,137 @@ function renderRosterGrid(type) {
     html || '<div style="color:var(--muted);font-size:13px">No roster players found.</div>';
 }
 
+function signalCounts(player, statInfoMap) {
+  let buys = 0, sells = 0, holds = 0;
+  for (const [stat, info] of Object.entries(statInfoMap)) {
+    if (!player.stats[stat]) continue;
+    const eff = (info.lowerBetter ? -1 : 1) * (player.stats[stat].cur - player.stats[stat].pre);
+    if      (eff >= info.defaultBuy)  buys++;
+    else if (eff <= info.defaultSell) sells++;
+    else                              holds++;
+  }
+  return { buys, sells, holds };
+}
+
 function renderTargets() {
-  const hStat = document.getElementById('target-h-stat').value;
-  const pStat = document.getElementById('target-p-stat').value;
+  const allTeamIds = new Set([...TEAM_HITTER_IDS, ...TEAM_PITCHER_IDS]);
 
-  function buildTargetTable(data, teamIds, stat, statInfoMap) {
-    const info    = statInfoMap[stat];
-    const targets = data
-      .filter(p => !teamIds.has(String(p.player_id)) && p.stats[stat])
-      .map(p => {
-        const { pre, cur } = p.stats[stat];
-        const delta = cur - pre;
-        const eff   = info.lowerBetter ? -delta : delta;
-        return { name: p.name, team: p.team, pos: p.pos || '', pre, cur, delta, eff };
-      })
-      .filter(p => p.eff >= info.defaultBuy)
-      .sort((a, b) => b.eff - a.eff)
-      .slice(0, 15);
-
-    if (!targets.length)
-      return '<div style="color:var(--muted);font-size:13px;padding:8px 0">No buy signals available.</div>';
-
-    const rows = targets.map(r => {
-      const sign = r.delta >= 0 ? '+' : '';
-      const cls  = r.delta >= 0 ? 'pos' : 'neg';
-      return `<tr>
-        <td>${r.name}</td>
-        <td class="team">${r.team}</td>
-        <td class="team">${r.pos}</td>
-        <td class="tnum">${r.pre.toFixed(info.decimals)}</td>
-        <td class="tnum">${r.cur.toFixed(info.decimals)}</td>
-        <td class="delta ${cls} tnum">${sign}${r.delta.toFixed(info.decimals)}</td>
-        <td><span class="signal-pill BUY">BUY</span></td>
-      </tr>`;
-    }).join('');
-
-    return `<table class="target-table">
-      <thead><tr>
-        <th>Player</th><th>Team</th><th>Pos</th>
-        <th style="text-align:right">Pre</th>
-        <th style="text-align:right">Cur</th>
-        <th style="text-align:right">Δ</th>
-        <th>Signal</th>
-      </tr></thead>
-      <tbody>${rows}</tbody>
-    </table>`;
+  function flaggedRosterPlayers(data, teamIds, statInfoMap) {
+    return data
+      .filter(p => teamIds.has(String(p.player_id)))
+      .map(p => ({ ...p, ...signalCounts(p, statInfoMap) }))
+      .filter(p => p.sells > p.buys)
+      .sort((a, b) => (b.sells - b.buys) - (a.sells - a.buys));
   }
 
-  document.getElementById('target-hitters-list').innerHTML =
-    buildTargetTable(HITTERS_DATA, TEAM_HITTER_IDS, hStat, HITTER_STAT_INFO);
-  document.getElementById('target-pitchers-list').innerHTML =
-    buildTargetTable(PITCHERS_DATA, TEAM_PITCHER_IDS, pStat, PITCHER_STAT_INFO);
+  function withinRange(candidate, reference, statInfoMap) {
+    for (const [stat, info] of Object.entries(statInfoMap)) {
+      if (!candidate.stats[stat] || !reference.stats[stat]) continue;
+      const window = 2 * info.defaultBuy;
+      if (Math.abs(candidate.stats[stat].cur - reference.stats[stat].cur) > window) return false;
+    }
+    return true;
+  }
+
+  function candidatesForPos(pos, data, statInfoMap, reference) {
+    return data
+      .filter(p => !allTeamIds.has(String(p.player_id)) && (p.pos || '') === pos)
+      .map(p => ({ ...p, ...signalCounts(p, statInfoMap) }))
+      .filter(p => p.buys > p.sells && withinRange(p, reference, statInfoMap))
+      .sort((a, b) => (b.buys - b.sells) - (a.buys - a.sells))
+      .slice(0, 8);
+  }
+
+  function buildGroupHTML(rosterPlayer, candidates, statInfoMap) {
+    const { name, team, pos, sells, buys } = rosterPlayer;
+    const stats = Object.keys(statInfoMap);
+    const sellWord = sells === 1 ? 'sell' : 'sells';
+
+    const thCols = stats.map(s => `<th style="text-align:right">${s}</th>`).join('');
+
+    function statCells(player, refPlayer) {
+      return stats.map(stat => {
+        const info = statInfoMap[stat];
+        if (!player.stats[stat]) return `<td class="tnum">—</td>`;
+        const cur = player.stats[stat].cur;
+        const refCur = refPlayer && refPlayer.stats[stat] ? refPlayer.stats[stat].cur : null;
+        const diff = refCur !== null ? cur - refCur : null;
+        const cls  = diff === null ? '' : (diff >= 0 ? (info.lowerBetter ? 'neg' : 'pos') : (info.lowerBetter ? 'pos' : 'neg'));
+        return `<td class="tnum ${cls}">${cur.toFixed(info.decimals)}</td>`;
+      }).join('');
+    }
+
+    const benchmarkCells = statCells(rosterPlayer, null);
+
+    let rows = '';
+    if (!candidates.length) {
+      rows = `<tr><td colspan="${4 + stats.length}" style="color:var(--muted);font-size:12px;padding:10px 8px">No comparable ${pos} players with positive signals found.</td></tr>`;
+    } else {
+      rows = candidates.map(c => {
+        const buyPill  = `<span class="signal-pill BUY"  style="font-size:10px;padding:2px 5px">${c.buys}B</span>`;
+        const holdPill = c.holds ? `<span class="signal-pill HOLD" style="font-size:10px;padding:2px 5px">${c.holds}H</span>` : '';
+        const sellPill = c.sells ? `<span class="signal-pill SELL" style="font-size:10px;padding:2px 5px">${c.sells}S</span>` : '';
+        return `<tr>
+          <td>${c.name}</td>
+          <td class="team">${c.team}</td>
+          <td class="team">${c.pos}</td>
+          <td style="white-space:nowrap">${buyPill}${holdPill}${sellPill}</td>
+          ${statCells(c, rosterPlayer)}
+        </tr>`;
+      }).join('');
+    }
+
+    return `<div class="target-group">
+      <div class="target-group-header">
+        <span class="target-group-player">${name}</span>
+        <span class="target-group-meta">${team} · ${pos}</span>
+        <span class="target-group-sells">${sells} ${sellWord} / ${buys} buy</span>
+      </div>
+      <table class="target-table">
+        <thead>
+          <tr>
+            <th>Player</th><th>Team</th><th>Pos</th><th>Signals</th>${thCols}
+          </tr>
+        </thead>
+        <tbody>
+          <tr class="benchmark-row">
+            <td style="color:var(--muted);font-style:italic">${name}</td>
+            <td class="team">${team}</td>
+            <td class="team">${pos}</td>
+            <td style="color:var(--muted);font-size:10px;font-family:'DM Mono',monospace">benchmark</td>
+            ${benchmarkCells}
+          </tr>
+          ${rows}
+        </tbody>
+      </table>
+    </div>`;
+  }
+
+  const flaggedHitters  = flaggedRosterPlayers(HITTERS_DATA, TEAM_HITTER_IDS, HITTER_STAT_INFO);
+  const flaggedPitchers = flaggedRosterPlayers(PITCHERS_DATA, TEAM_PITCHER_IDS, PITCHER_STAT_INFO);
+
+  let html = '';
+
+  if (!flaggedHitters.length && !flaggedPitchers.length) {
+    html = '<div style="color:var(--muted);font-size:13px;padding:12px 0">✓ No roster players have more sells than buys — your team looks healthy.</div>';
+  } else {
+    if (flaggedHitters.length) {
+      html += `<div class="dashboard-col-title" style="margin-bottom:14px">Hitters</div>`;
+      flaggedHitters.forEach(p => {
+        const candidates = candidatesForPos(p.pos, HITTERS_DATA, HITTER_STAT_INFO, p);
+        html += buildGroupHTML(p, candidates, HITTER_STAT_INFO);
+      });
+    }
+    if (flaggedPitchers.length) {
+      html += `<div class="dashboard-col-title" style="margin-bottom:14px;margin-top:${flaggedHitters.length ? '24px' : '0'}">Pitchers</div>`;
+      flaggedPitchers.forEach(p => {
+        const candidates = candidatesForPos(p.pos, PITCHERS_DATA, PITCHER_STAT_INFO, p);
+        html += buildGroupHTML(p, candidates, PITCHER_STAT_INFO);
+      });
+    }
+  }
+
+  document.getElementById('targets-container').innerHTML = html;
 }
 
 

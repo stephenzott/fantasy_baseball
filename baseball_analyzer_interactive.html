@@ -1114,7 +1114,6 @@ function renderTradeComparison() {
   const bP = tradeState.B.filter(p => p.ptype === 'pitcher');
 
   const HITTER_TRADE_STATS = [
-    { key:'WAR',  label:'WAR',  agg:'sum', dec:2, lb:false },
     { key:'HR',   label:'HR',   agg:'sum', dec:1, lb:false },
     { key:'R',    label:'R',    agg:'sum', dec:1, lb:false },
     { key:'RBI',  label:'RBI',  agg:'sum', dec:1, lb:false },
@@ -1124,7 +1123,6 @@ function renderTradeComparison() {
     { key:'wRC+', label:'wRC+', agg:'avg', dec:1, lb:false },
   ];
   const PITCHER_TRADE_STATS = [
-    { key:'WAR',  label:'WAR',  agg:'sum', dec:2, lb:false },
     { key:'W',    label:'W',    agg:'sum', dec:1, lb:false },
     { key:'K',    label:'K',    agg:'sum', dec:1, lb:false },
     { key:'ERA',  label:'ERA',  agg:'avg', dec:2, lb:true  },
@@ -1133,10 +1131,64 @@ function renderTradeComparison() {
     { key:'FIP',  label:'FIP',  agg:'avg', dec:2, lb:true  },
   ];
 
-  let html = '';
+  // WAR table — all players combined, then hitter/pitcher breakdown
+  const warStat = { key:'WAR', label:'WAR', agg:'sum', dec:2, lb:false };
+  const WAR_STATS = [
+    { key:'WAR', label:'Total WAR',   agg:'sum', dec:2, lb:false, aPlayers: [...aH, ...aP], bPlayers: [...bH, ...bP] },
+    { key:'WAR', label:'Hitter WAR',  agg:'sum', dec:2, lb:false, aPlayers: aH, bPlayers: bH },
+    { key:'WAR', label:'Pitcher WAR', agg:'sum', dec:2, lb:false, aPlayers: aP, bPlayers: bP },
+  ];
+
+  let html = buildWarTable(WAR_STATS);
   if (aH.length || bH.length) html += buildTradeTable('Hitter Comparison', HITTER_TRADE_STATS, aH, bH);
   if (aP.length || bP.length) html += buildTradeTable('Pitcher Comparison', PITCHER_TRADE_STATS, aP, bP);
   el.innerHTML = html;
+}
+
+function buildWarTable(warStats) {
+  function sumWar(players) {
+    const vals = players.map(p => p.stats['WAR']?.cur).filter(v => v != null && !isNaN(v));
+    return vals.length ? vals.reduce((a, b) => a + b, 0) : null;
+  }
+
+  let aTotal = 0, bTotal = 0;
+  const rows = warStats.map(row => {
+    const aVal = sumWar(row.aPlayers);
+    const bVal = sumWar(row.bPlayers);
+    let edge = 'tie', aW = false, bW = false;
+    if (aVal != null && bVal != null && aVal !== bVal) {
+      aW = aVal > bVal; bW = !aW;
+      edge = aW ? 'a' : 'b';
+    }
+    return { label: row.label, aVal, bVal, edge, aW, bW };
+  });
+
+  const aWins = rows[0].aVal != null && rows[0].bVal != null && rows[0].aVal > rows[0].bVal;
+  const bWins = rows[0].aVal != null && rows[0].bVal != null && rows[0].bVal > rows[0].aVal;
+  const summaryA = aWins ? 'lead' : '';
+  const summaryB = bWins ? 'lead' : '';
+
+  let html = `<div class="section-title" style="margin-top:0;margin-bottom:12px">WAR — All Players</div>
+  <div class="trade-summary">
+    <span class="trade-summary-pill ${summaryA}">Side A: ${rows[0].aVal != null ? rows[0].aVal.toFixed(2) : '—'} WAR</span>
+    <span class="trade-summary-pill ${summaryB}">Side B: ${rows[0].bVal != null ? rows[0].bVal.toFixed(2) : '—'} WAR</span>
+  </div>
+  <table class="trade-comp-table"><thead><tr>
+    <th></th><th style="text-align:right">Side A</th><th style="text-align:right">Side B</th><th style="text-align:center">Edge</th>
+  </tr></thead><tbody>`;
+
+  rows.forEach(({label, aVal, bVal, edge, aW, bW}) => {
+    const fmt = v => v == null ? '—' : v.toFixed(2);
+    html += `<tr>
+      <td class="team">${label}</td>
+      <td class="num ${aW ? 'win' : ''}">${fmt(aVal)}</td>
+      <td class="num ${bW ? 'win' : ''}">${fmt(bVal)}</td>
+      <td class="edge ${edge}">${edge === 'a' ? 'A' : edge === 'b' ? 'B' : '='}</td>
+    </tr>`;
+  });
+
+  html += '</tbody></table>';
+  return html;
 }
 
 function buildTradeTable(title, stats, aPlayers, bPlayers) {

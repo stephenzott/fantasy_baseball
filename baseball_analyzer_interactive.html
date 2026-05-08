@@ -334,11 +334,11 @@
   </div>
 
   <div class="tabs">
-    <button class="tab-btn active" onclick="switchTab('hitters')">Hitters</button>
+    <button class="tab-btn active" onclick="switchTab('myteam')">My Team</button>
+    <button class="tab-btn" onclick="switchTab('overall')">Overall</button>
+    <button class="tab-btn" onclick="switchTab('hitters')">Hitters</button>
     <button class="tab-btn" onclick="switchTab('pitchers')">Pitchers</button>
     <button class="tab-btn" onclick="switchTab('search')">Player Search</button>
-    <button class="tab-btn" onclick="switchTab('myteam')">My Team</button>
-    <button class="tab-btn" onclick="switchTab('overall')">Overall</button>
   </div>
 
   <!-- HITTER SECTION -->
@@ -499,7 +499,7 @@ function switchTab(tab) {
   document.getElementById('search-section').style.display  = tab === 'search'   ? '' : 'none';
   document.getElementById('myteam-section').style.display  = tab === 'myteam'   ? '' : 'none';
   document.getElementById('overall-section').style.display = tab === 'overall'  ? '' : 'none';
-  const tabs = ['hitters', 'pitchers', 'search', 'myteam', 'overall'];
+  const tabs = ['myteam', 'overall', 'hitters', 'pitchers', 'search'];
   document.querySelectorAll('.tab-btn').forEach((btn, i) => {
     btn.classList.toggle('active', tabs[i] === tab);
   });
@@ -994,6 +994,7 @@ document.getElementById('p-stat-select').addEventListener('change', function() {
 
 updateAnalysis('hitter');
 updateAnalysis('pitcher');
+switchTab('myteam');
 </script>
 </body>
 </html>

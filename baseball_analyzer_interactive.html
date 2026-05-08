@@ -1114,6 +1114,7 @@ function renderTradeComparison() {
   const bP = tradeState.B.filter(p => p.ptype === 'pitcher');
 
   const HITTER_TRADE_STATS = [
+    { key:'WAR',  label:'WAR',  agg:'sum', dec:2, lb:false },
     { key:'HR',   label:'HR',   agg:'sum', dec:1, lb:false },
     { key:'R',    label:'R',    agg:'sum', dec:1, lb:false },
     { key:'RBI',  label:'RBI',  agg:'sum', dec:1, lb:false },
@@ -1121,16 +1122,15 @@ function renderTradeComparison() {
     { key:'AVG',  label:'AVG',  agg:'avg', dec:3, lb:false },
     { key:'OBP',  label:'OBP',  agg:'avg', dec:3, lb:false },
     { key:'wRC+', label:'wRC+', agg:'avg', dec:1, lb:false },
-    { key:'WAR',  label:'WAR',  agg:'sum', dec:2, lb:false },
   ];
   const PITCHER_TRADE_STATS = [
+    { key:'WAR',  label:'WAR',  agg:'sum', dec:2, lb:false },
     { key:'W',    label:'W',    agg:'sum', dec:1, lb:false },
     { key:'K',    label:'K',    agg:'sum', dec:1, lb:false },
     { key:'ERA',  label:'ERA',  agg:'avg', dec:2, lb:true  },
     { key:'WHIP', label:'WHIP', agg:'avg', dec:3, lb:true  },
     { key:'K/BB', label:'K/BB', agg:'avg', dec:2, lb:false },
     { key:'FIP',  label:'FIP',  agg:'avg', dec:2, lb:true  },
-    { key:'WAR',  label:'WAR',  agg:'sum', dec:2, lb:false },
   ];
 
   let html = '';

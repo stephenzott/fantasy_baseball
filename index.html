@@ -538,12 +538,9 @@
         <div id="roster-pitcher-list"></div>
       </div>
     </div>
-    <div style="margin-top:12px;display:flex;align-items:center;gap:12px;flex-wrap:wrap">
-      <button onclick="publishRoster()" style="background:rgba(34,201,122,0.1);border:1px solid rgba(34,201,122,0.3);color:var(--buy);font-family:'DM Mono',monospace;font-size:11px;letter-spacing:1px;padding:6px 18px;border-radius:6px;cursor:pointer;text-transform:uppercase;transition:opacity 0.2s" onmouseover="this.style.opacity='0.75'" onmouseout="this.style.opacity='1'">Publish Roster</button>
+    <div style="margin-top:12px">
       <button onclick="resetRoster()" style="background:none;border:1px solid var(--border);color:var(--muted);font-family:'DM Mono',monospace;font-size:11px;letter-spacing:1px;padding:6px 16px;border-radius:6px;cursor:pointer;text-transform:uppercase;transition:color 0.2s,border-color 0.2s" onmouseover="this.style.color='var(--sell)';this.style.borderColor='var(--sell)'" onmouseout="this.style.color='var(--muted)';this.style.borderColor='var(--border)'">Reset to Default</button>
-      <button onclick="clearGhToken()" style="background:none;border:none;color:var(--muted);font-family:'DM Mono',monospace;font-size:10px;cursor:pointer;text-decoration:underline;padding:0" title="Clear stored GitHub token">Clear Token</button>
     </div>
-    <div id="publish-status" style="margin-top:8px;font-family:'DM Mono',monospace;font-size:11px;color:var(--muted)"></div>
   </div>
 
   <!-- OVERALL SECTION -->
@@ -1146,51 +1143,6 @@ function resetRoster() {
   renderRosterTab();
 }
 
-async function publishRoster() {
-  const statusEl = document.getElementById('publish-status');
-  const setStatus = (msg, color) => { statusEl.textContent = msg; statusEl.style.color = color || 'var(--muted)'; };
-
-  let token = localStorage.getItem('gh_pat');
-  if (!token) {
-    token = prompt('Enter your GitHub Personal Access Token (stored locally in your browser only):');
-    if (!token) return;
-    localStorage.setItem('gh_pat', token.trim());
-    token = token.trim();
-  }
-
-  const owner = 'stephenzott', repo = 'fantasy_baseball', path = 'roster.json';
-  const headers = { Authorization: 'token ' + token, 'Content-Type': 'application/json' };
-  const apiBase = 'https://api.github.com/repos/' + owner + '/' + repo + '/contents/' + path;
-
-  setStatus('Publishing…');
-  try {
-    // Get current file SHA
-    const infoRes = await fetch(apiBase, { headers });
-    if (!infoRes.ok) throw new Error('Could not reach GitHub API (status ' + infoRes.status + '). Check your token.');
-    const info = await infoRes.json();
-
-    const body = JSON.stringify({ hitters: [...TEAM_HITTER_IDS], pitchers: [...TEAM_PITCHER_IDS] }, null, 2);
-    const encoded = btoa(unescape(encodeURIComponent(body)));
-
-    const putRes = await fetch(apiBase, {
-      method: 'PUT',
-      headers,
-      body: JSON.stringify({ message: 'Update fantasy roster', content: encoded, sha: info.sha }),
-    });
-    if (!putRes.ok) {
-      const err = await putRes.json();
-      throw new Error(err.message || 'PUT failed');
-    }
-    setStatus('✓ Roster published — GitHub Pages will update in ~60s.', 'var(--buy)');
-  } catch(e) {
-    setStatus('✗ ' + e.message, 'var(--sell)');
-  }
-}
-
-function clearGhToken() {
-  localStorage.removeItem('gh_pat');
-  document.getElementById('publish-status').textContent = 'Token cleared.';
-}
 
 function renderRosterTab() {
   renderRosterList('hitter');

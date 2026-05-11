@@ -165,6 +165,10 @@ After running, if files changed: `git add baseball_analyzer_interactive.html ind
 
 - **Never remove or overwrite existing features** unless explicitly instructed to do so. When adding new functionality (e.g. a new tab, filter, or section), always merge it with what's already in the HTML template — do not discard features that weren't part of the current task.
 
+## ESPN Roster Sync Notes
+
+- **Unmatched players are expected and ignorable.** `espn_roster_sync.py` matches ESPN names to FanGraphs CSVs; players on the IL or not yet in the current projections will show as unmatched. Do not add them to `roster.json` manually — they'll be picked up automatically on the next sync once they reappear in the current projections CSV.
+
 ## Known Issues
 
 - Merging preseason (`player_id` as string) with current projections (`player_id` as int64) raises `ValueError`. Fix: cast both to the same type before merging, e.g. `df['player_id'] = df['player_id'].astype(str)` in `load_csv`.

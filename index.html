@@ -293,6 +293,7 @@
     color: var(--accent);
     border: 1px solid rgba(79,143,255,0.3);
   }
+  .fa-star { color: #22c97a; font-size: 11px; margin-left: 4px; cursor: default; }
   .player-card table { background: transparent; border: none; border-radius: 0; }
   .player-card thead { background: rgba(255,255,255,0.015); }
   .player-card tbody tr:last-child { border-bottom: none; }
@@ -490,7 +491,10 @@
         <div class="roster-grid" id="my-pitchers-grid"></div>
       </div>
     </div>
-    <div class="section-title" style="margin-bottom:16px">🎯 Potential Targets</div>
+    <div style="display:flex;align-items:baseline;gap:16px;margin-bottom:16px">
+      <div class="section-title">🎯 Potential Targets</div>
+      <div style="font-size:11px;color:var(--muted)"><span class="fa-star">★</span> = free agent in your league</div>
+    </div>
     <div id="targets-container"></div>
   </div>
 
@@ -608,6 +612,9 @@ const DEFAULT_PITCHER_IDS = ["31843", "19374", "21052", "21483", "27914", "10233
 
 let TEAM_HITTER_IDS  = new Set(DEFAULT_HITTER_IDS);
 let TEAM_PITCHER_IDS = new Set(DEFAULT_PITCHER_IDS);
+const FREE_AGENT_HITTER_IDS  = ["22581", "29646", "34967", "20391", "19950", "sa3019969", "11739", "27562", "25180", "sa3025261", "15362", "33189", "17338", "10324", "27690", "22263", "19901", "27490", "22184", "27555", "15653", "28020", "29766", "sa3008916", "31357", "19566", "26123", "26438", "21622", "19392", "22823", "21538", "21501", "24729", "17901", "15878", "26477", "33280", "16472", "17929", "17988", "9218", "18900", "19238", "27506", "31695", "sa3017374", "25477", "9774", "21865", "19352", "26466", "19610", "7802", "26548", "23813", "14968", "27478", "31431", "25493", "11737", "27534", "22896", "21693", "16376", "15711", "31441", "26031", "23986", "19858", "29931", "19363", "26365", "21780", "25782"];
+const FREE_AGENT_PITCHER_IDS = ["37124", "20423", "17878", "23550", "25007", "29878", "31475", "15890", "19926", "12317", "22210", "30184", "19479", "13619", "31760", "27688", "16400", "23363", "21487", "30113", "15488", "12304", "19716", "19769", "27572", "16122", "19995", "22294", "35321", "24728", "16918", "16358", "21992", "30107", "24763", "19867", "25679", "26108", "24737", "3137", "7048", "6902", "17920", "25636", "8700", "29357", "30140", "19350", "21520", "9323", "27819", "33850", "27782", "17425", "27494", "9073", "29608", "20629", "27500", "17897", "19876", "24614", "24017", "23499", "27702", "16814", "26213", "27889", "15256", "31811", "26252", "15873", "21504", "22191", "24282", "18297", "15823", "19205", "20997", "17170", "24609", "30133", "10061", "10078", "18403", "21537", "29770", "25796", "26231", "17780", "19444", "27694", "12828", "25098", "25420", "12572", "21863", "15038", "12857"];
+let FREE_AGENT_IDS   = new Set([...FREE_AGENT_HITTER_IDS, ...FREE_AGENT_PITCHER_IDS]);
 
 const DEFAULT_BRIAN_HITTER_IDS  = ["31539", "11579", "19608", "13510", "31347", "19556", "30116", "32127", "21842", "27676", "13066"];
 const DEFAULT_BRIAN_PITCHER_IDS = ["27867", "15816", "26213", "25420", "30076", "19959", "30182", "10310", "27758", "22201", "31461", "22543", "26252", "27863"];
@@ -683,8 +690,14 @@ function getSignal(delta, info) {
   return 'HOLD';
 }
 
-function savantUrl(name, pos) {
-  const type = (pos === 'SP' || pos === 'RP') ? 'pitcher' : 'batter';
+function savantUrl(name, pos, mlbamId) {
+  const isPitcher = (pos === 'SP' || pos === 'RP');
+  if (mlbamId) {
+    const slug = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+    const statType = isPitcher ? 'pitching' : 'hitting';
+    return `https://baseballsavant.mlb.com/savant-player/${slug}-${mlbamId}?stats=statcast-r-${statType}-mlb`;
+  }
+  const type = isPitcher ? 'pitcher' : 'batter';
   return `https://baseballsavant.mlb.com/statcast_search?player_type=${type}&player_name=${encodeURIComponent(name)}`;
 }
 
@@ -736,7 +749,7 @@ function runSearch() {
 
     return `<div class="player-card${isMyTeam ? ' my-team' : ''}">
       <div class="player-card-header">
-        <span class="player-card-name">${player.name}<a href="${savantUrl(player.name, player.pos || (type === 'pitcher' ? 'SP' : '1B'))}" target="_blank" rel="noopener" class="savant-link" title="Baseball Savant">↗</a></span>
+        <span class="player-card-name">${player.name}<a href="${savantUrl(player.name, player.pos || (type === 'pitcher' ? 'SP' : '1B'), player.mlbam_id)}" target="_blank" rel="noopener" class="savant-link" title="Baseball Savant">↗</a></span>
         <span class="player-card-team">${player.team}</span>
         ${posLabel}${typeBadge}${teamBadge}
       </div>
@@ -850,11 +863,27 @@ function renderTargets() {
     return true;
   }
 
+  // Free agents: no upper bound — only exclude if significantly worse than the reference.
+  function withinRangeLowerOnly(candidate, reference, statInfoMap) {
+    for (const [stat, info] of Object.entries(statInfoMap)) {
+      if (!candidate.stats[stat] || !reference.stats[stat]) continue;
+      const window = 2 * info.defaultBuy;
+      const diff    = candidate.stats[stat].cur - reference.stats[stat].cur;
+      const worseBy = info.lowerBetter ? diff : -diff;
+      if (worseBy > window) return false;
+    }
+    return true;
+  }
+
   function candidatesForPos(pos, data, statInfoMap, reference) {
     return data
       .filter(p => !allTeamIds.has(String(p.player_id)) && (p.pos || '') === pos)
       .map(p => ({ ...p, ...signalCounts(p, statInfoMap) }))
-      .filter(p => p.buys > p.sells && withinRange(p, reference, statInfoMap))
+      .filter(p => {
+        if (p.buys <= p.sells) return false;
+        const isFa = FREE_AGENT_IDS.has(String(p.player_id));
+        return isFa ? withinRangeLowerOnly(p, reference, statInfoMap) : withinRange(p, reference, statInfoMap);
+      })
       .sort((a, b) => (b.buys - b.sells) - (a.buys - a.sells))
       .slice(0, 8);
   }
@@ -888,8 +917,9 @@ function renderTargets() {
         const buyPill  = `<span class="signal-pill BUY"  style="font-size:10px;padding:2px 5px">${c.buys}B</span>`;
         const holdPill = c.holds ? `<span class="signal-pill HOLD" style="font-size:10px;padding:2px 5px">${c.holds}H</span>` : '';
         const sellPill = c.sells ? `<span class="signal-pill SELL" style="font-size:10px;padding:2px 5px">${c.sells}S</span>` : '';
+        const faStar   = FREE_AGENT_IDS.has(String(c.player_id)) ? '<span class="fa-star" title="Free agent in your league">★</span>' : '';
         return `<tr>
-          <td>${c.name}<a href="${savantUrl(c.name, c.pos)}" target="_blank" rel="noopener" class="savant-link" title="Baseball Savant">↗</a></td>
+          <td>${c.name}<a href="${savantUrl(c.name, c.pos, c.mlbam_id)}" target="_blank" rel="noopener" class="savant-link" title="Baseball Savant">↗</a>${faStar}</td>
           <td class="team">${c.team}</td>
           <td class="team">${c.pos}</td>
           <td style="white-space:nowrap">${buyPill}${holdPill}${sellPill}</td>
@@ -1069,7 +1099,7 @@ function renderBrianTargets() {
         const holdPill = c.holds ? `<span class="signal-pill HOLD" style="font-size:10px;padding:2px 5px">${c.holds}H</span>` : '';
         const sellPill = c.sells ? `<span class="signal-pill SELL" style="font-size:10px;padding:2px 5px">${c.sells}S</span>` : '';
         return `<tr>
-          <td>${c.name}<a href="${savantUrl(c.name, c.pos)}" target="_blank" rel="noopener" class="savant-link" title="Baseball Savant">↗</a></td>
+          <td>${c.name}<a href="${savantUrl(c.name, c.pos, c.mlbam_id)}" target="_blank" rel="noopener" class="savant-link" title="Baseball Savant">↗</a></td>
           <td class="team">${c.team}</td>
           <td class="team">${c.pos}</td>
           <td style="white-space:nowrap">${buyPill}${holdPill}${sellPill}</td>
@@ -1242,7 +1272,7 @@ function calculateAndDisplay(data, stat, info, buyThreshold, sellThreshold, pref
     else if (eff <= sellThreshold) signal = 'SELL';
     else                           signal = 'HOLD';
 
-    results.push({ name: player.name, team: player.team, pos: player.pos || '', player_id: player.player_id, pre, cur, delta, signal, isMyTeam });
+    results.push({ name: player.name, team: player.team, pos: player.pos || '', player_id: player.player_id, mlbam_id: player.mlbam_id, pre, cur, delta, signal, isMyTeam });
   });
 
   const counts = { BUY: 0, SELL: 0, HOLD: 0 };
@@ -1276,7 +1306,7 @@ function calculateAndDisplay(data, stat, info, buyThreshold, sellThreshold, pref
     const cls     = r.delta >= 0 ? 'pos' : 'neg';
     const teamCls = r.isMyTeam ? ' my-team-row' : '';
     return `<tr class="${teamCls}">
-        <td class="name">${r.name}<a href="${savantUrl(r.name, r.pos)}" target="_blank" rel="noopener" class="savant-link" title="Baseball Savant">↗</a></td>
+        <td class="name">${r.name}<a href="${savantUrl(r.name, r.pos, r.mlbam_id)}" target="_blank" rel="noopener" class="savant-link" title="Baseball Savant">↗</a></td>
         <td class="team">${r.team}</td>
         <td class="team">${r.pos}</td>
         <td class="num">${r.pre.toFixed(decimals)}</td>
@@ -1356,7 +1386,7 @@ function renderOverallDashboard() {
       const sign  = delta > 0 ? '+' : '';
       const pills = r.buyStats.map(s => `<span class="signal-pill BUY">${s}</span>`).join(' ');
       html += `<tr>
-        <td class="name">${r.name}<a href="${savantUrl(r.name, r.pos || '')}" target="_blank" rel="noopener" class="savant-link" title="Baseball Savant">↗</a></td>
+        <td class="name">${r.name}<a href="${savantUrl(r.name, r.pos || '', r.mlbam_id)}" target="_blank" rel="noopener" class="savant-link" title="Baseball Savant">↗</a></td>
         <td class="team">${r.team}</td>
         <td class="team">${r.pos || ''}</td>
         <td class="num" style="text-align:right">${r.buys}</td>

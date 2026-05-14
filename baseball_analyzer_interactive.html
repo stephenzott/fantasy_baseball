@@ -1490,7 +1490,10 @@ function renderFADashboard() {
   const sortSelect = document.getElementById('fa-sort-stat');
   const curSort    = sortSelect.value;
   sortSelect.innerHTML = '<option value="buys"' + (curSort === 'buys' ? ' selected' : '') + '>Buy Signals</option>' +
-    stats.map(s => `<option value="${s}"${s === curSort ? ' selected' : ''}>${statInfoMap[s].label} (${s})</option>`).join('');
+    stats.flatMap(s => [
+      `<option value="${s}"${s === curSort ? ' selected' : ''}>${s} — trend (Δ)</option>`,
+      `<option value="${s}_cur"${s+'_cur' === curSort ? ' selected' : ''}>${s} — current</option>`
+    ]).join('');
 
   const posFilter = posSelect.value;
   const sortStat  = sortSelect.value;
@@ -1516,6 +1519,14 @@ function renderFADashboard() {
   // Sort
   if (sortStat === 'buys') {
     players.sort((a, b) => (b.buys - b.sells) - (a.buys - a.sells));
+  } else if (sortStat.endsWith('_cur')) {
+    const stat = sortStat.slice(0, -4);
+    const info = statInfoMap[stat];
+    players.sort((a, b) => {
+      const va = a.stats[stat] ? a.stats[stat].cur : -Infinity;
+      const vb = b.stats[stat] ? b.stats[stat].cur : -Infinity;
+      return info.lowerBetter ? va - vb : vb - va;
+    });
   } else {
     const info = statInfoMap[sortStat];
     players.sort((a, b) => {
@@ -1547,7 +1558,7 @@ function renderFADashboard() {
     `<th colspan="2" style="text-align:center;cursor:pointer;border-left:1px solid var(--border)" onclick="document.getElementById('fa-sort-stat').value='${s}';renderFADashboard()" title="Sort by ${s}">${s}</th>`
   ).join('');
   const thSubHeaders = stats.map(s =>
-    `<th style="text-align:right;border-left:1px solid var(--border);color:var(--muted);font-weight:400">Cur</th>` +
+    `<th style="text-align:right;border-left:1px solid var(--border);color:var(--muted);font-weight:400;cursor:pointer" onclick="document.getElementById('fa-sort-stat').value='${s}_cur';renderFADashboard()">Cur</th>` +
     `<th style="text-align:center;cursor:pointer;color:var(--muted);font-weight:400" onclick="document.getElementById('fa-sort-stat').value='${s}';renderFADashboard()">↕</th>`
   ).join('');
 

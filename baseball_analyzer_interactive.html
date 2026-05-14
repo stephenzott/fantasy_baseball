@@ -1548,7 +1548,7 @@ function renderFADashboard() {
   ).join('');
   const thSubHeaders = stats.map(s =>
     `<th style="text-align:right;border-left:1px solid var(--border);color:var(--muted);font-weight:400">Cur</th>` +
-    `<th style="text-align:right;cursor:pointer;color:var(--muted);font-weight:400" onclick="document.getElementById('fa-sort-stat').value='${s}';renderFADashboard()">Δ</th>`
+    `<th style="text-align:center;cursor:pointer;color:var(--muted);font-weight:400" onclick="document.getElementById('fa-sort-stat').value='${s}';renderFADashboard()">↕</th>`
   ).join('');
 
   let rows = '';
@@ -1564,9 +1564,9 @@ function renderFADashboard() {
       const delta = cur - p.stats[stat].pre;
       const eff   = info.lowerBetter ? -delta : delta;
       const cls   = eff >= info.defaultBuy ? 'pos' : (eff <= info.defaultSell ? 'neg' : '');
-      const sign  = delta > 0 ? '+' : '';
+      const arrow = eff >= info.defaultBuy ? '↑' : (eff <= info.defaultSell ? '↓' : '–');
       return `<td class="tnum" style="border-left:1px solid var(--border)">${cur.toFixed(info.decimals)}</td>` +
-             `<td class="tnum ${cls}">${sign}${delta.toFixed(info.decimals)}</td>`;
+             `<td class="tnum ${cls}" style="text-align:center">${arrow}</td>`;
     }).join('');
 
     rows += `<tr>

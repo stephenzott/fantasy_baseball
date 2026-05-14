@@ -1543,23 +1543,30 @@ function renderFADashboard() {
     return;
   }
 
-  const thCols = stats.map(s => `<th style="text-align:right;cursor:pointer" onclick="document.getElementById('fa-sort-stat').value='${s}';renderFADashboard()" title="Sort by ${s}">${s} Δ</th>`).join('');
+  const thStatHeaders = stats.map(s =>
+    `<th colspan="2" style="text-align:center;cursor:pointer;border-left:1px solid var(--border)" onclick="document.getElementById('fa-sort-stat').value='${s}';renderFADashboard()" title="Sort by ${s}">${s}</th>`
+  ).join('');
+  const thSubHeaders = stats.map(s =>
+    `<th style="text-align:right;border-left:1px solid var(--border);color:var(--muted);font-weight:400">Cur</th>` +
+    `<th style="text-align:right;cursor:pointer;color:var(--muted);font-weight:400" onclick="document.getElementById('fa-sort-stat').value='${s}';renderFADashboard()">Δ</th>`
+  ).join('');
 
   let rows = '';
   for (const p of players) {
-    const overall = p.buys > p.sells ? 'BUY' : (p.sells > p.buys ? 'SELL' : 'HOLD');
     const buyPill  = p.buys  ? `<span class="signal-pill BUY"  style="font-size:10px;padding:2px 5px">${p.buys}B</span>`  : '';
     const holdPill = p.holds ? `<span class="signal-pill HOLD" style="font-size:10px;padding:2px 5px">${p.holds}H</span>` : '';
     const sellPill = p.sells ? `<span class="signal-pill SELL" style="font-size:10px;padding:2px 5px">${p.sells}S</span>` : '';
 
-    const deltaCells = stats.map(stat => {
-      if (!p.stats[stat]) return `<td class="tnum">—</td>`;
+    const statCells = stats.map(stat => {
+      if (!p.stats[stat]) return `<td class="tnum" style="border-left:1px solid var(--border)">—</td><td class="tnum">—</td>`;
       const info  = statInfoMap[stat];
-      const delta = p.stats[stat].cur - p.stats[stat].pre;
+      const cur   = p.stats[stat].cur;
+      const delta = cur - p.stats[stat].pre;
       const eff   = info.lowerBetter ? -delta : delta;
       const cls   = eff >= info.defaultBuy ? 'pos' : (eff <= info.defaultSell ? 'neg' : '');
       const sign  = delta > 0 ? '+' : '';
-      return `<td class="tnum ${cls}">${sign}${delta.toFixed(info.decimals)}</td>`;
+      return `<td class="tnum" style="border-left:1px solid var(--border)">${cur.toFixed(info.decimals)}</td>` +
+             `<td class="tnum ${cls}">${sign}${delta.toFixed(info.decimals)}</td>`;
     }).join('');
 
     rows += `<tr>
@@ -1567,7 +1574,7 @@ function renderFADashboard() {
       <td class="team">${p.team}</td>
       <td class="team">${p.pos || ''}</td>
       <td style="white-space:nowrap">${buyPill}${holdPill}${sellPill}</td>
-      ${deltaCells}
+      ${statCells}
     </tr>`;
   }
 
@@ -1576,9 +1583,13 @@ function renderFADashboard() {
       <table style="border:none;border-radius:0;">
         <thead style="position:sticky;top:0;z-index:1;background:var(--surface);">
           <tr>
-            <th style="cursor:pointer" onclick="document.getElementById('fa-sort-stat').value='buys';renderFADashboard()">Player</th>
-            <th>Team</th><th>Pos</th><th>Signals</th>${thCols}
+            <th rowspan="2" style="cursor:pointer;vertical-align:bottom" onclick="document.getElementById('fa-sort-stat').value='buys';renderFADashboard()">Player</th>
+            <th rowspan="2" style="vertical-align:bottom">Team</th>
+            <th rowspan="2" style="vertical-align:bottom">Pos</th>
+            <th rowspan="2" style="vertical-align:bottom">Signals</th>
+            ${thStatHeaders}
           </tr>
+          <tr>${thSubHeaders}</tr>
         </thead>
         <tbody>${rows}</tbody>
       </table>

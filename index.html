@@ -373,6 +373,7 @@
     <button class="tab-btn" onclick="switchTab('brianteam')">Brian Team</button>
     <button class="tab-btn" onclick="switchTab('brianroster')">Brian Roster</button>
     <button class="tab-btn" onclick="switchTab('overall')">Overall</button>
+    <button class="tab-btn" onclick="switchTab('fa')">Free Agents</button>
     <button class="tab-btn" onclick="switchTab('hitters')">Hitters</button>
     <button class="tab-btn" onclick="switchTab('pitchers')">Pitchers</button>
     <button class="tab-btn" onclick="switchTab('trade')">Trade Analyzer</button>
@@ -595,6 +596,40 @@
   </div>
 
   <!-- OVERALL SECTION -->
+  <!-- FREE AGENTS SECTION -->
+  <div id="fa-section" style="display:none">
+    <div class="controls">
+      <div class="control-row">
+        <div class="control-group">
+          <label>Type</label>
+          <select id="fa-type-select" onchange="renderFADashboard()">
+            <option value="hitter">Hitters</option>
+            <option value="pitcher">Pitchers</option>
+          </select>
+        </div>
+        <div class="control-group">
+          <label for="fa-pos-filter">Position</label>
+          <select id="fa-pos-filter" onchange="renderFADashboard()">
+            <option value="">All</option>
+          </select>
+        </div>
+        <div class="control-group">
+          <label for="fa-sort-stat">Sort By</label>
+          <select id="fa-sort-stat" onchange="renderFADashboard()">
+            <option value="buys">Buy Signals</option>
+          </select>
+        </div>
+      </div>
+    </div>
+    <div class="summary">
+      <div class="card total"><div class="card-label">Free Agents</div><div class="card-value" id="fa-sum-total">-</div></div>
+      <div class="card buy"><div class="card-label">Buy Signals</div><div class="card-value" id="fa-sum-buy">-</div></div>
+      <div class="card hold"><div class="card-label">Hold</div><div class="card-value" id="fa-sum-hold">-</div></div>
+      <div class="card sell"><div class="card-label">Sell Signals</div><div class="card-value" id="fa-sum-sell">-</div></div>
+    </div>
+    <div id="fa-content"></div>
+  </div>
+
   <div id="overall-section" style="display:none">
     <div class="section-title" style="margin-top:0;margin-bottom:16px">Hitters — Sorted by OBP Improvement</div>
     <div id="overall-hitters-content"></div>
@@ -670,7 +705,8 @@ function switchTab(tab) {
   document.getElementById('brianroster-section').style.display = tab === 'brianroster' ? '' : 'none';
   document.getElementById('trade-section').style.display      = tab === 'trade'       ? '' : 'none';
   document.getElementById('overall-section').style.display    = tab === 'overall'     ? '' : 'none';
-  const tabs = ['myteam', 'roster', 'brianteam', 'brianroster', 'overall', 'hitters', 'pitchers', 'trade', 'search'];
+  document.getElementById('fa-section').style.display         = tab === 'fa'          ? '' : 'none';
+  const tabs = ['myteam', 'roster', 'brianteam', 'brianroster', 'overall', 'fa', 'hitters', 'pitchers', 'trade', 'search'];
   document.querySelectorAll('.tab-btn').forEach((btn, i) => {
     btn.classList.toggle('active', tabs[i] === tab);
   });
@@ -680,6 +716,7 @@ function switchTab(tab) {
   if (tab === 'brianteam')   renderBrianTeamDashboard();
   if (tab === 'brianroster') renderBrianRosterTab();
   if (tab === 'overall')     renderOverallDashboard();
+  if (tab === 'fa')          renderFADashboard();
   if (tab === 'trade')       renderTrade();
 }
 
@@ -1432,6 +1469,143 @@ function renderOverallDashboard() {
     buildOverallTable(pitcherRows, 'ERA', r => r.preVal - r.curVal, 2);
 }
 
+
+// ── Free Agents ─────────────────────────────────────────────────────────────
+function renderFADashboard() {
+  const type        = document.getElementById('fa-type-select').value;
+  const isHitter    = type === 'hitter';
+  const data        = isHitter ? HITTERS_DATA    : PITCHERS_DATA;
+  const faIds       = isHitter ? new Set(FREE_AGENT_HITTER_IDS) : new Set(FREE_AGENT_PITCHER_IDS);
+  const statInfoMap = isHitter ? HITTER_STAT_INFO : PITCHER_STAT_INFO;
+  const stats       = Object.keys(statInfoMap);
+
+  // Sync position filter options
+  const posSelect = document.getElementById('fa-pos-filter');
+  const positions = isHitter ? ['C','1B','2B','3B','SS','OF','DH'] : ['SP','RP'];
+  const curPos    = posSelect.value;
+  posSelect.innerHTML = '<option value="">All</option>' +
+    positions.map(p => `<option value="${p}"${p === curPos ? ' selected' : ''}>${p}</option>`).join('');
+
+  // Sync sort options
+  const sortSelect = document.getElementById('fa-sort-stat');
+  const curSort    = sortSelect.value;
+  sortSelect.innerHTML = '<option value="buys"' + (curSort === 'buys' ? ' selected' : '') + '>Buy Signals</option>' +
+    stats.flatMap(s => [
+      `<option value="${s}"${s === curSort ? ' selected' : ''}>${s} — trend (Δ)</option>`,
+      `<option value="${s}_cur"${s+'_cur' === curSort ? ' selected' : ''}>${s} — current</option>`
+    ]).join('');
+
+  const posFilter = posSelect.value;
+  const sortStat  = sortSelect.value;
+
+  function signalCounts(player) {
+    let buys = 0, holds = 0, sells = 0;
+    for (const [stat, info] of Object.entries(statInfoMap)) {
+      if (!player.stats[stat]) continue;
+      const delta = player.stats[stat].cur - player.stats[stat].pre;
+      const eff   = info.lowerBetter ? -delta : delta;
+      if (eff >= info.defaultBuy)       buys++;
+      else if (eff <= info.defaultSell) sells++;
+      else                              holds++;
+    }
+    return { buys, holds, sells };
+  }
+
+  let players = data
+    .filter(p => faIds.has(String(p.player_id)))
+    .filter(p => !posFilter || (p.pos || '') === posFilter)
+    .map(p => ({ ...p, ...signalCounts(p) }));
+
+  // Sort
+  if (sortStat === 'buys') {
+    players.sort((a, b) => (b.buys - b.sells) - (a.buys - a.sells));
+  } else if (sortStat.endsWith('_cur')) {
+    const stat = sortStat.slice(0, -4);
+    const info = statInfoMap[stat];
+    players.sort((a, b) => {
+      const va = a.stats[stat] ? a.stats[stat].cur : -Infinity;
+      const vb = b.stats[stat] ? b.stats[stat].cur : -Infinity;
+      return info.lowerBetter ? va - vb : vb - va;
+    });
+  } else {
+    const info = statInfoMap[sortStat];
+    players.sort((a, b) => {
+      const da = a.stats[sortStat] ? a.stats[sortStat].cur - a.stats[sortStat].pre : -Infinity;
+      const db = b.stats[sortStat] ? b.stats[sortStat].cur - b.stats[sortStat].pre : -Infinity;
+      return info.lowerBetter ? da - db : db - da;
+    });
+  }
+
+  // Summary counts — overall signal = buys > sells → BUY, sells > buys → SELL, else HOLD
+  let sumBuy = 0, sumHold = 0, sumSell = 0;
+  players.forEach(p => {
+    if (p.buys > p.sells)       sumBuy++;
+    else if (p.sells > p.buys)  sumSell++;
+    else                        sumHold++;
+  });
+  document.getElementById('fa-sum-total').textContent = players.length;
+  document.getElementById('fa-sum-buy').textContent   = sumBuy;
+  document.getElementById('fa-sum-hold').textContent  = sumHold;
+  document.getElementById('fa-sum-sell').textContent  = sumSell;
+
+  if (!players.length) {
+    document.getElementById('fa-content').innerHTML =
+      '<p style="color:var(--muted);font-size:13px;padding:12px 0;">No free agents found for this filter.</p>';
+    return;
+  }
+
+  const thStatHeaders = stats.map(s =>
+    `<th colspan="2" style="text-align:center;cursor:pointer;border-left:1px solid var(--border)" onclick="document.getElementById('fa-sort-stat').value='${s}';renderFADashboard()" title="Sort by ${s}">${s}</th>`
+  ).join('');
+  const thSubHeaders = stats.map(s =>
+    `<th style="text-align:right;border-left:1px solid var(--border);color:var(--muted);font-weight:400;cursor:pointer" onclick="document.getElementById('fa-sort-stat').value='${s}_cur';renderFADashboard()">Cur</th>` +
+    `<th style="text-align:center;cursor:pointer;color:var(--muted);font-weight:400" onclick="document.getElementById('fa-sort-stat').value='${s}';renderFADashboard()">↕</th>`
+  ).join('');
+
+  let rows = '';
+  for (const p of players) {
+    const buyPill  = p.buys  ? `<span class="signal-pill BUY"  style="font-size:10px;padding:2px 5px">${p.buys}B</span>`  : '';
+    const holdPill = p.holds ? `<span class="signal-pill HOLD" style="font-size:10px;padding:2px 5px">${p.holds}H</span>` : '';
+    const sellPill = p.sells ? `<span class="signal-pill SELL" style="font-size:10px;padding:2px 5px">${p.sells}S</span>` : '';
+
+    const statCells = stats.map(stat => {
+      if (!p.stats[stat]) return `<td class="tnum" style="border-left:1px solid var(--border)">—</td><td class="tnum">—</td>`;
+      const info  = statInfoMap[stat];
+      const cur   = p.stats[stat].cur;
+      const delta = cur - p.stats[stat].pre;
+      const eff   = info.lowerBetter ? -delta : delta;
+      const cls   = eff >= info.defaultBuy ? 'pos' : (eff <= info.defaultSell ? 'neg' : '');
+      const arrow = eff >= info.defaultBuy ? '↑' : (eff <= info.defaultSell ? '↓' : '–');
+      return `<td class="tnum" style="border-left:1px solid var(--border)">${cur.toFixed(info.decimals)}</td>` +
+             `<td class="tnum ${cls}" style="text-align:center">${arrow}</td>`;
+    }).join('');
+
+    rows += `<tr>
+      <td>${p.name}<a href="${savantUrl(p.name, p.pos, p.mlbam_id)}" target="_blank" rel="noopener" class="savant-link" title="Baseball Savant">↗</a></td>
+      <td class="team">${p.team}</td>
+      <td class="team">${p.pos || ''}</td>
+      <td style="white-space:nowrap">${buyPill}${holdPill}${sellPill}</td>
+      ${statCells}
+    </tr>`;
+  }
+
+  document.getElementById('fa-content').innerHTML =
+    `<div style="max-height:560px;overflow-y:auto;border:1px solid var(--border);border-radius:8px;">
+      <table style="border:none;border-radius:0;">
+        <thead style="position:sticky;top:0;z-index:1;background:var(--surface);">
+          <tr>
+            <th rowspan="2" style="cursor:pointer;vertical-align:bottom" onclick="document.getElementById('fa-sort-stat').value='buys';renderFADashboard()">Player</th>
+            <th rowspan="2" style="vertical-align:bottom">Team</th>
+            <th rowspan="2" style="vertical-align:bottom">Pos</th>
+            <th rowspan="2" style="vertical-align:bottom">Signals</th>
+            ${thStatHeaders}
+          </tr>
+          <tr>${thSubHeaders}</tr>
+        </thead>
+        <tbody>${rows}</tbody>
+      </table>
+    </div>`;
+}
 
 // ── Roster Management ──────────────────────────────────────────────────────
 function rosterSearch(type) {

@@ -46,6 +46,18 @@ df.to_csv("results.csv", index=False)
 
 Fetches ZiPS update projections from the FanGraphs API and writes to `projections_updated.csv`. Logs to `download.log`.
 
+## "Update the Page" — Full Refresh Workflow
+
+When the user says "update the page" (or similar), run all five steps in this order:
+
+1. **Embed projection data** — run the Python snippet in the "Updating Embedded HTML Data from CSVs" section below. The four CSVs have already been downloaded manually.
+2. **Sync roster** — `source venv/bin/activate && python espn_roster_sync.py`
+3. **Sync free agents** — `source venv/bin/activate && python espn_free_agents.py --json`
+4. **Update scoreboard** — `source venv/bin/activate && python espn_scoreboard.py`
+5. **Update league stats** — `source venv/bin/activate && python espn_league_stats.py`
+
+Steps 1, 2, 4, and 5 can run in parallel. Step 3 handles its own commit and push to GitHub Pages. After steps 1, 2, 4, and 5 complete, commit `baseball_analyzer_interactive.html` (projection data), then sync to `index.html` and push.
+
 ## Updating Embedded HTML Data from CSVs
 
 When the user asks to update the projection data in the HTML, run this Python snippet inline (no separate script needed). It reads the four CSVs, merges on `PlayerId`, regenerates `HITTERS_DATA` and `PITCHERS_DATA` in both HTML files (line numbers detected dynamically), and skips the commit if nothing changed.

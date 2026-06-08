@@ -326,6 +326,34 @@
   .target-table td.tnum { text-align: right; font-family: 'DM Mono', monospace; font-size: 12px; }
   .target-table tbody tr:hover { background: rgba(255,255,255,0.03); }
 
+  /* ── Scoreboard ── */
+  .scoreboard-header { display: flex; align-items: baseline; gap: 16px; margin-bottom: 24px; flex-wrap: wrap; }
+  .scoreboard-week { font-family: 'Bebas Neue', sans-serif; font-size: 36px; letter-spacing: 2px; color: var(--text); }
+  .scoreboard-vs { font-family: 'DM Mono', monospace; font-size: 12px; color: var(--muted); }
+  .scoreboard-score { font-family: 'Bebas Neue', sans-serif; font-size: 24px; color: var(--accent); }
+  .scoreboard-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 32px; }
+  @media (max-width: 700px) { .scoreboard-grid { grid-template-columns: 1fr; } }
+  .scoreboard-table { width: 100%; border-collapse: collapse; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
+  .scoreboard-table thead { background: rgba(255,255,255,0.02); }
+  .scoreboard-table th { padding: 10px 14px; font-family: 'DM Mono', monospace; font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; text-align: left; border-bottom: 1px solid var(--border); }
+  .scoreboard-table td { padding: 11px 14px; font-size: 13px; border-bottom: 1px solid rgba(255,255,255,0.03); }
+  .scoreboard-table tbody tr:hover { background: rgba(255,255,255,0.03); }
+  .scoreboard-table td.sc-stat { font-family: 'DM Mono', monospace; font-weight: 500; font-size: 11px; color: var(--muted); width: 70px; }
+  .scoreboard-table td.sc-num { font-family: 'DM Mono', monospace; text-align: right; }
+  .scoreboard-table td.sc-num.win { color: var(--buy); font-weight: 600; }
+  .scoreboard-table td.sc-num.loss { color: var(--sell); }
+  .scoreboard-table td.sc-num.tie { color: var(--muted); }
+  .scoreboard-table td.sc-badge { width: 60px; text-align: center; }
+  .scoreboard-table tr.ineligible td { opacity: 0.4; }
+  .sb-improve-header { font-family: 'DM Mono', monospace; font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 10px; }
+  .sb-improve-list { display: flex; flex-direction: column; gap: 8px; }
+  .sb-improve-player { display: flex; align-items: center; gap: 10px; background: var(--surface); border: 1px solid var(--border); border-radius: 6px; padding: 8px 12px; font-size: 13px; }
+  .sb-improve-player.fa-available { border-color: rgba(34,201,122,0.3); }
+  .sb-improve-name { flex: 1; font-weight: 500; }
+  .sb-improve-team { font-family: 'DM Mono', monospace; font-size: 11px; color: var(--muted); }
+  .sb-improve-val { font-family: 'DM Mono', monospace; font-size: 12px; color: var(--buy); }
+  .sb-stale-notice { font-family: 'DM Mono', monospace; font-size: 11px; color: var(--muted); margin-bottom: 20px; padding: 10px 14px; background: rgba(255,255,255,0.02); border: 1px solid var(--border); border-radius: 6px; }
+
   /* ── Trade Analyzer ── */
   .trade-layout { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 28px; }
   @media (max-width: 700px) { .trade-layout { grid-template-columns: 1fr; } }
@@ -369,6 +397,7 @@
 
   <div class="tabs">
     <button class="tab-btn active" onclick="switchTab('myteam')">My Team</button>
+    <button class="tab-btn" onclick="switchTab('scoreboard')">Scoreboard</button>
     <button class="tab-btn" onclick="switchTab('roster')">Roster</button>
     <button class="tab-btn" onclick="switchTab('brianteam')">Brian Team</button>
     <button class="tab-btn" onclick="switchTab('brianroster')">Brian Roster</button>
@@ -595,6 +624,11 @@
     </div>
   </div>
 
+  <!-- SCOREBOARD SECTION -->
+  <div id="scoreboard-section" style="display:none">
+    <div id="scoreboard-content"></div>
+  </div>
+
   <!-- OVERALL SECTION -->
   <!-- FREE AGENTS SECTION -->
   <div id="fa-section" style="display:none">
@@ -650,6 +684,7 @@ let TEAM_PITCHER_IDS = new Set(DEFAULT_PITCHER_IDS);
 const FREE_AGENT_HITTER_IDS  = ["22581", "12161", "29646", "20391", "27490", "11739", "26477", "21842", "19950", "31580", "22239", "14221", "17128", "27562", "29766", "9218", "15362", "17338", "25479", "23813", "10324", "33189", "20572", "26438", "17273", "25979", "15878", "27690", "11899", "sa3022498", "27555", "22823", "26031", "17901", "31490", "29931", "17988", "19392", "sa3017626", "28020", "21501", "19566", "24729", "9774", "17929", "21538", "33322", "16472", "16512", "18900", "28312", "23789", "sa3022561", "18123", "14968", "19722", "26202", "10472", "31357", "31695"];
 const FREE_AGENT_PITCHER_IDS = ["30184", "37124", "24978", "sa3034986", "29878", "29357", "17878", "19716", "20191", "30107", "11674", "22210", "15823", "21520", "13361", "12317", "13619", "22294", "25377", "25890", "20387", "19926", "15890", "25636", "19769", "23363", "12304", "27814", "27819", "32056", "24728", "16918", "22872", "19479", "26108", "16400", "23920", "24763", "27494", "27572", "sa3020606", "19883", "16122", "21924", "21992", "23499", "14120", "9323", "3137", "35321", "27688", "31760", "8700", "17611", "19316", "17920", "19995", "24609", "26213", "27500", "17735", "31972", "19350", "23301", "31621", "20997", "20629", "33850", "32157", "27782", "9073", "10061", "19876", "31468", "27552", "17897", "30140", "22288", "19867"];
 let FREE_AGENT_IDS   = new Set([...FREE_AGENT_HITTER_IDS, ...FREE_AGENT_PITCHER_IDS]);
+const SCOREBOARD_DATA = {"week": 11, "scoring_period": 76, "my_team": "San Francisco Giants", "opp_team": "St. Louis Cardinals", "my_wins": 0, "opp_wins": 0, "ties": 12, "winner": "UNDECIDED", "categories": [{"stat_id": 20, "name": "R", "label": "Runs", "my_score": 0.0, "opp_score": 0.0, "result": "TIE", "lower_better": false, "ineligible": false}, {"stat_id": 5, "name": "HR", "label": "Home Runs", "my_score": 0.0, "opp_score": 0.0, "result": "TIE", "lower_better": false, "ineligible": false}, {"stat_id": 21, "name": "RBI", "label": "RBI", "my_score": 0.0, "opp_score": 0.0, "result": "TIE", "lower_better": false, "ineligible": false}, {"stat_id": 23, "name": "SB", "label": "Stolen Bases", "my_score": 0.0, "opp_score": 0.0, "result": "TIE", "lower_better": false, "ineligible": false}, {"stat_id": 2, "name": "AVG", "label": "AVG", "my_score": 0.0, "opp_score": 0.0, "result": "TIE", "lower_better": false, "ineligible": false}, {"stat_id": 18, "name": "OPS", "label": "OPS", "my_score": 0.0, "opp_score": 0.0, "result": "TIE", "lower_better": false, "ineligible": false}, {"stat_id": 53, "name": "W", "label": "Wins", "my_score": 0.0, "opp_score": 0.0, "result": "TIE", "lower_better": false, "ineligible": false}, {"stat_id": 48, "name": "K", "label": "Strikeouts", "my_score": 0.0, "opp_score": 0.0, "result": "TIE", "lower_better": false, "ineligible": false}, {"stat_id": 82, "name": "K/BB", "label": "K/BB", "my_score": 0.0, "opp_score": 0.0, "result": "TIE", "lower_better": false, "ineligible": true}, {"stat_id": 83, "name": "SVHD", "label": "Saves+Holds", "my_score": 0.0, "opp_score": 0.0, "result": "TIE", "lower_better": false, "ineligible": false}, {"stat_id": 47, "name": "ERA", "label": "ERA", "my_score": null, "opp_score": null, "result": "TIE", "lower_better": true, "ineligible": true}, {"stat_id": 41, "name": "WHIP", "label": "WHIP", "my_score": null, "opp_score": null, "result": "TIE", "lower_better": true, "ineligible": true}], "generated": "2026-06-08T14:16:23.836832+00:00"};
 
 const DEFAULT_BRIAN_HITTER_IDS  = ["31539", "11579", "19608", "13510", "31347", "19556", "30116", "32127", "21842", "27676", "13066"];
 const DEFAULT_BRIAN_PITCHER_IDS = ["27867", "15816", "26213", "25420", "30076", "19959", "30182", "10310", "27758", "22201", "31461", "22543", "26252", "27863"];
@@ -696,28 +731,169 @@ let activeTab = 'hitters';
 
 function switchTab(tab) {
   activeTab = tab;
-  document.getElementById('hitter-section').style.display  = tab === 'hitters'  ? '' : 'none';
-  document.getElementById('pitcher-section').style.display = tab === 'pitchers' ? '' : 'none';
-  document.getElementById('search-section').style.display     = tab === 'search'      ? '' : 'none';
-  document.getElementById('myteam-section').style.display     = tab === 'myteam'      ? '' : 'none';
-  document.getElementById('roster-section').style.display     = tab === 'roster'      ? '' : 'none';
-  document.getElementById('brianteam-section').style.display  = tab === 'brianteam'   ? '' : 'none';
-  document.getElementById('brianroster-section').style.display = tab === 'brianroster' ? '' : 'none';
-  document.getElementById('trade-section').style.display      = tab === 'trade'       ? '' : 'none';
-  document.getElementById('overall-section').style.display    = tab === 'overall'     ? '' : 'none';
-  document.getElementById('fa-section').style.display         = tab === 'fa'          ? '' : 'none';
-  const tabs = ['myteam', 'roster', 'brianteam', 'brianroster', 'overall', 'fa', 'hitters', 'pitchers', 'trade', 'search'];
+  document.getElementById('hitter-section').style.display      = tab === 'hitters'    ? '' : 'none';
+  document.getElementById('pitcher-section').style.display     = tab === 'pitchers'   ? '' : 'none';
+  document.getElementById('search-section').style.display      = tab === 'search'     ? '' : 'none';
+  document.getElementById('myteam-section').style.display      = tab === 'myteam'     ? '' : 'none';
+  document.getElementById('roster-section').style.display      = tab === 'roster'     ? '' : 'none';
+  document.getElementById('brianteam-section').style.display   = tab === 'brianteam'  ? '' : 'none';
+  document.getElementById('brianroster-section').style.display = tab === 'brianroster'? '' : 'none';
+  document.getElementById('trade-section').style.display       = tab === 'trade'      ? '' : 'none';
+  document.getElementById('overall-section').style.display     = tab === 'overall'    ? '' : 'none';
+  document.getElementById('fa-section').style.display          = tab === 'fa'         ? '' : 'none';
+  document.getElementById('scoreboard-section').style.display  = tab === 'scoreboard' ? '' : 'none';
+  const tabs = ['myteam', 'scoreboard', 'roster', 'brianteam', 'brianroster', 'overall', 'fa', 'hitters', 'pitchers', 'trade', 'search'];
   document.querySelectorAll('.tab-btn').forEach((btn, i) => {
     btn.classList.toggle('active', tabs[i] === tab);
   });
   if (tab === 'search')      document.getElementById('player-search-input').focus();
   if (tab === 'myteam')      renderMyTeamDashboard();
+  if (tab === 'scoreboard')  renderScoreboard();
   if (tab === 'roster')      renderRosterTab();
   if (tab === 'brianteam')   renderBrianTeamDashboard();
   if (tab === 'brianroster') renderBrianRosterTab();
   if (tab === 'overall')     renderOverallDashboard();
   if (tab === 'fa')          renderFADashboard();
   if (tab === 'trade')       renderTrade();
+}
+
+// ── Scoreboard ──────────────────────────────────────────────────────────────
+function renderScoreboard() {
+  const el = document.getElementById('scoreboard-content');
+  const sb = SCOREBOARD_DATA;
+
+  if (!sb) {
+    el.innerHTML = `<div class="sb-stale-notice">No scoreboard data loaded. Run <code>python espn_scoreboard.py</code> to fetch the current week's matchup.</div>`;
+    return;
+  }
+
+  // Generated timestamp
+  const gen = sb.generated ? new Date(sb.generated) : null;
+  const genStr = gen ? gen.toLocaleString() : '';
+
+  // Win / loss indicator for the overall record
+  const myW = sb.my_wins, oppW = sb.opp_wins, ties = sb.ties;
+  const isWinning = myW > oppW, isLosing = myW < oppW;
+  const recordColor = isWinning ? 'var(--buy)' : (isLosing ? 'var(--sell)' : 'var(--hold)');
+
+  // FanGraphs stat → projected cur value accessor (for improvements section)
+  const FG_STAT_MAP = {
+    'R':    { data: 'hitter', key: 'R'   },
+    'HR':   { data: 'hitter', key: 'HR'  },
+    'RBI':  { data: 'hitter', key: 'RBI' },
+    'SB':   { data: 'hitter', key: 'SB'  },
+    'AVG':  { data: 'hitter', key: 'AVG' },
+    'OPS':  { data: 'hitter', key: 'OBP' },  // OBP as proxy until OPS is embedded
+    'W':    { data: 'pitcher', key: 'W'  },
+    'K':    { data: 'pitcher', key: 'K'  },
+    'K/BB': { data: 'pitcher', key: 'K/BB' },
+    'ERA':  { data: 'pitcher', key: 'ERA' },
+    'WHIP': { data: 'pitcher', key: 'WHIP' },
+  };
+
+  function topFAImprovements(statName, lowerBetter, count = 5) {
+    const mapping = FG_STAT_MAP[statName];
+    if (!mapping) return [];
+    const isHitter = mapping.data === 'hitter';
+    const data  = isHitter ? HITTERS_DATA : PITCHERS_DATA;
+    const faIds = new Set(isHitter ? FREE_AGENT_HITTER_IDS : FREE_AGENT_PITCHER_IDS);
+    const key   = mapping.key;
+    return data
+      .filter(p => faIds.has(String(p.player_id)) && p.stats[key])
+      .map(p => ({ ...p, val: p.stats[key].cur }))
+      .sort((a, b) => lowerBetter ? a.val - b.val : b.val - a.val)
+      .slice(0, count);
+  }
+
+  function fmtScore(val, lowerBetter, name) {
+    if (val === null || val === undefined) return '—';
+    if (['AVG', 'OPS', 'WHIP', 'K/BB', 'ERA'].includes(name)) return val.toFixed(3);
+    return Math.round(val).toString();
+  }
+
+  function fmtVal(val, name) {
+    if (val === null || val === undefined) return '—';
+    if (['AVG', 'OBP', 'WHIP', 'K/BB', 'ERA'].includes(name)) return val.toFixed(3);
+    return Math.round(val).toString();
+  }
+
+  // Build per-category rows
+  const cats = sb.categories || [];
+  const hitterStats = new Set(['R','HR','RBI','SB','AVG','OPS']);
+  const hitCats = cats.filter(c => hitterStats.has(c.name));
+  const pitCats = cats.filter(c => !hitterStats.has(c.name));
+
+  function buildTable(catList, title) {
+    let rows = '';
+    for (const cat of catList) {
+      const myCls   = cat.result === 'WIN'  ? 'win'  : (cat.result === 'LOSS' ? 'loss' : 'tie');
+      const oppCls  = cat.result === 'LOSS' ? 'win'  : (cat.result === 'WIN'  ? 'loss' : 'tie');
+      const badge   = cat.ineligible
+        ? `<span class="signal-pill HOLD" style="font-size:9px">N/A</span>`
+        : (cat.result === 'WIN'  ? `<span class="signal-pill BUY">WIN</span>`
+         : cat.result === 'LOSS' ? `<span class="signal-pill SELL">LOSS</span>`
+         : `<span class="signal-pill HOLD">TIE</span>`);
+      rows += `<tr class="${cat.ineligible ? 'ineligible' : ''}">
+        <td class="sc-stat">${cat.label}</td>
+        <td class="sc-num ${myCls}">${fmtScore(cat.my_score,  cat.lower_better, cat.name)}</td>
+        <td class="sc-num ${oppCls}">${fmtScore(cat.opp_score, cat.lower_better, cat.name)}</td>
+        <td class="sc-badge">${badge}</td>
+      </tr>`;
+    }
+    return `
+      <div class="dashboard-col-title">${title}</div>
+      <table class="scoreboard-table">
+        <thead><tr>
+          <th>Category</th>
+          <th style="text-align:right">Mine</th>
+          <th style="text-align:right">Theirs</th>
+          <th style="text-align:center">Result</th>
+        </tr></thead>
+        <tbody>${rows}</tbody>
+      </table>`;
+  }
+
+  // Improvements: categories I'm losing
+  const losing = cats.filter(c => c.result === 'LOSS' && !c.ineligible);
+  let improveHtml = '';
+  if (losing.length) {
+    improveHtml = `<div class="section-title" style="margin-top:32px">How to Improve</div>`;
+    for (const cat of losing) {
+      const pickups = topFAImprovements(cat.name, cat.lower_better);
+      if (!pickups.length) continue;
+      const fgKey = FG_STAT_MAP[cat.name]?.key || cat.name;
+      const isProxy = cat.name === 'OPS';
+      improveHtml += `
+        <div style="margin-bottom:24px">
+          <div class="sb-improve-header">${cat.label} — Top Free Agents${isProxy ? ' (by OBP)' : ''}</div>
+          <div class="sb-improve-list">`;
+      for (const p of pickups) {
+        improveHtml += `<div class="sb-improve-player fa-available">
+          <span class="sb-improve-name">${p.name}</span>
+          <span class="sb-improve-team">${p.team}</span>
+          ${p.pos ? `<span class="player-card-team">${p.pos}</span>` : ''}
+          <span class="sb-improve-val">${fgKey} ${fmtVal(p.stats[fgKey]?.cur, fgKey)}</span>
+        </div>`;
+      }
+      improveHtml += `</div></div>`;
+    }
+  }
+
+  el.innerHTML = `
+    <div class="scoreboard-header">
+      <div class="scoreboard-week">Week ${sb.week}</div>
+      <div>
+        <div class="scoreboard-vs">${sb.my_team} vs ${sb.opp_team}</div>
+        <div class="scoreboard-score" style="color:${recordColor}">${myW} – ${oppW}${ties ? ` – ${ties}T` : ''}</div>
+      </div>
+      ${genStr ? `<div style="font-family:'DM Mono',monospace;font-size:10px;color:var(--muted);margin-left:auto">Updated ${genStr}</div>` : ''}
+    </div>
+    <div class="scoreboard-grid">
+      ${buildTable(hitCats, 'Hitting Categories')}
+      ${buildTable(pitCats, 'Pitching Categories')}
+    </div>
+    ${losing.length === 0 ? `<div style="color:var(--buy);font-family:'DM Mono',monospace;font-size:13px;padding:16px 0">Winning all active categories!</div>` : improveHtml}
+  `;
 }
 
 function getSignal(delta, info) {

@@ -1,0 +1,133 @@
+{
+  "week": 11,
+  "scoring_period": 76,
+  "my_team": "San Francisco Giants",
+  "opp_team": "St. Louis Cardinals",
+  "my_wins": 0,
+  "opp_wins": 0,
+  "ties": 12,
+  "winner": "UNDECIDED",
+  "categories": [
+    {
+      "stat_id": 20,
+      "name": "R",
+      "label": "Runs",
+      "my_score": 0.0,
+      "opp_score": 0.0,
+      "result": "TIE",
+      "lower_better": false,
+      "ineligible": false
+    },
+    {
+      "stat_id": 5,
+      "name": "HR",
+      "label": "Home Runs",
+      "my_score": 0.0,
+      "opp_score": 0.0,
+      "result": "TIE",
+      "lower_better": false,
+      "ineligible": false
+    },
+    {
+      "stat_id": 21,
+      "name": "RBI",
+      "label": "RBI",
+      "my_score": 0.0,
+      "opp_score": 0.0,
+      "result": "TIE",
+      "lower_better": false,
+      "ineligible": false
+    },
+    {
+      "stat_id": 23,
+      "name": "SB",
+      "label": "Stolen Bases",
+      "my_score": 0.0,
+      "opp_score": 0.0,
+      "result": "TIE",
+      "lower_better": false,
+      "ineligible": false
+    },
+    {
+      "stat_id": 2,
+      "name": "AVG",
+      "label": "AVG",
+      "my_score": 0.0,
+      "opp_score": 0.0,
+      "result": "TIE",
+      "lower_better": false,
+      "ineligible": false
+    },
+    {
+      "stat_id": 18,
+      "name": "OPS",
+      "label": "OPS",
+      "my_score": 0.0,
+      "opp_score": 0.0,
+      "result": "TIE",
+      "lower_better": false,
+      "ineligible": false
+    },
+    {
+      "stat_id": 53,
+      "name": "W",
+      "label": "Wins",
+      "my_score": 0.0,
+      "opp_score": 0.0,
+      "result": "TIE",
+      "lower_better": false,
+      "ineligible": false
+    },
+    {
+      "stat_id": 48,
+      "name": "K",
+      "label": "Strikeouts",
+      "my_score": 0.0,
+      "opp_score": 0.0,
+      "result": "TIE",
+      "lower_better": false,
+      "ineligible": false
+    },
+    {
+      "stat_id": 82,
+      "name": "K/BB",
+      "label": "K/BB",
+      "my_score": 0.0,
+      "opp_score": 0.0,
+      "result": "TIE",
+      "lower_better": false,
+      "ineligible": true
+    },
+    {
+      "stat_id": 83,
+      "name": "SVHD",
+      "label": "Saves+Holds",
+      "my_score": 0.0,
+      "opp_score": 0.0,
+      "result": "TIE",
+      "lower_better": false,
+      "ineligible": false
+    },
+    {
+      "stat_id": 47,
+      "name": "ERA",
+      "label": "ERA",
+      "my_score": null,
+      "opp_score": null,
+      "result": "TIE",
+      "lower_better": true,
+      "ineligible": true
+    },
+    {
+      "stat_id": 41,
+      "name": "WHIP",
+      "label": "WHIP",
+      "my_score": null,
+      "opp_score": null,
+      "result": "TIE",
+      "lower_better": true,
+      "ineligible": true
+    }
+  ],
+  "generated": "2026-06-08T14:16:23.836832+00:00"
+}

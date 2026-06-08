@@ -354,6 +354,39 @@
   .sb-improve-val { font-family: 'DM Mono', monospace; font-size: 12px; color: var(--buy); }
   .sb-stale-notice { font-family: 'DM Mono', monospace; font-size: 11px; color: var(--muted); margin-bottom: 20px; padding: 10px 14px; background: rgba(255,255,255,0.02); border: 1px solid var(--border); border-radius: 6px; }
 
+  /* ── League Stats ── */
+  .league-rank-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 10px; margin-bottom: 28px; }
+  @media (max-width: 700px) { .league-rank-grid { grid-template-columns: repeat(3, 1fr); } }
+  .rank-card { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 12px; text-align: center; }
+  .rank-card .rc-stat { font-family: 'DM Mono', monospace; font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px; }
+  .rank-card .rc-rank { font-family: 'Bebas Neue', sans-serif; font-size: 28px; letter-spacing: 1px; }
+  .rank-card .rc-val  { font-family: 'DM Mono', monospace; font-size: 11px; color: var(--muted); margin-top: 2px; }
+  .rank-card.top    { border-color: rgba(34,201,122,0.35);  background: rgba(34,201,122,0.04); }
+  .rank-card.top    .rc-rank { color: var(--buy); }
+  .rank-card.mid    { border-color: rgba(240,160,48,0.3); }
+  .rank-card.mid    .rc-rank { color: var(--hold); }
+  .rank-card.bottom { border-color: rgba(240,64,96,0.3); }
+  .rank-card.bottom .rc-rank { color: var(--sell); }
+  .league-table-wrap { overflow-x: auto; margin-bottom: 32px; }
+  .league-table { width: 100%; border-collapse: collapse; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; white-space: nowrap; }
+  .league-table thead { background: rgba(255,255,255,0.02); position: sticky; top: 0; z-index: 2; }
+  .league-table th { padding: 9px 12px; font-family: 'DM Mono', monospace; font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; border-bottom: 1px solid var(--border); cursor: pointer; user-select: none; white-space: nowrap; }
+  .league-table th:hover { color: var(--text); }
+  .league-table th.sort-asc::after  { content: ' ↑'; color: var(--accent); }
+  .league-table th.sort-desc::after { content: ' ↓'; color: var(--accent); }
+  .league-table td { padding: 9px 12px; font-size: 12px; border-bottom: 1px solid rgba(255,255,255,0.03); }
+  .league-table td.lt-name { font-weight: 500; font-size: 13px; white-space: nowrap; }
+  .league-table td.lt-num  { font-family: 'DM Mono', monospace; text-align: right; color: var(--muted); }
+  .league-table td.lt-rank { font-family: 'DM Mono', monospace; text-align: center; font-size: 11px; }
+  .league-table tbody tr.my-row { background: rgba(79,143,255,0.07); }
+  .league-table tbody tr.my-row td.lt-name { color: var(--accent); }
+  .league-table tbody tr:hover { background: rgba(255,255,255,0.03); }
+  .league-table tbody tr.my-row:hover { background: rgba(79,143,255,0.12); }
+  .lt-rank-badge { display: inline-block; font-family: 'DM Mono', monospace; font-size: 10px; padding: 2px 6px; border-radius: 3px; }
+  .lt-rank-badge.top    { background: rgba(34,201,122,0.12); color: var(--buy); }
+  .lt-rank-badge.mid    { background: rgba(240,160,48,0.1);  color: var(--hold); }
+  .lt-rank-badge.bottom { background: rgba(240,64,96,0.1);   color: var(--sell); }
+
   /* ── Trade Analyzer ── */
   .trade-layout { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 28px; }
   @media (max-width: 700px) { .trade-layout { grid-template-columns: 1fr; } }
@@ -579,6 +612,7 @@
     <div style="margin-top:12px">
       <button onclick="resetRoster()" style="background:none;border:1px solid var(--border);color:var(--muted);font-family:'DM Mono',monospace;font-size:11px;letter-spacing:1px;padding:6px 16px;border-radius:6px;cursor:pointer;text-transform:uppercase;transition:color 0.2s,border-color 0.2s" onmouseover="this.style.color='var(--sell)';this.style.borderColor='var(--sell)'" onmouseout="this.style.color='var(--muted)';this.style.borderColor='var(--border)'">Reset to Default</button>
     </div>
+    <div id="league-stats-content" style="margin-top:40px"></div>
   </div>
 
   <!-- BRIAN TEAM SECTION -->
@@ -684,6 +718,7 @@ let TEAM_PITCHER_IDS = new Set(DEFAULT_PITCHER_IDS);
 const FREE_AGENT_HITTER_IDS  = ["22581", "12161", "29646", "20391", "27490", "11739", "26477", "21842", "19950", "31580", "22239", "14221", "17128", "27562", "29766", "9218", "15362", "17338", "25479", "23813", "10324", "33189", "20572", "26438", "17273", "25979", "15878", "27690", "11899", "sa3022498", "27555", "22823", "26031", "17901", "31490", "29931", "17988", "19392", "sa3017626", "28020", "21501", "19566", "24729", "9774", "17929", "21538", "33322", "16472", "16512", "18900", "28312", "23789", "sa3022561", "18123", "14968", "19722", "26202", "10472", "31357", "31695"];
 const FREE_AGENT_PITCHER_IDS = ["30184", "37124", "24978", "sa3034986", "29878", "29357", "17878", "19716", "20191", "30107", "11674", "22210", "15823", "21520", "13361", "12317", "13619", "22294", "25377", "25890", "20387", "19926", "15890", "25636", "19769", "23363", "12304", "27814", "27819", "32056", "24728", "16918", "22872", "19479", "26108", "16400", "23920", "24763", "27494", "27572", "sa3020606", "19883", "16122", "21924", "21992", "23499", "14120", "9323", "3137", "35321", "27688", "31760", "8700", "17611", "19316", "17920", "19995", "24609", "26213", "27500", "17735", "31972", "19350", "23301", "31621", "20997", "20629", "33850", "32157", "27782", "9073", "10061", "19876", "31468", "27552", "17897", "30140", "22288", "19867"];
 let FREE_AGENT_IDS   = new Set([...FREE_AGENT_HITTER_IDS, ...FREE_AGENT_PITCHER_IDS]);
+const LEAGUE_STATS_DATA = {"generated": "2026-06-08T14:24:23.949793+00:00", "scoring_period": 76, "my_team_id": 12, "total_teams": 12, "categories": [{"stat_id": 20, "name": "R", "label": "Runs", "lower_better": false, "teams": [{"team_id": 5, "team_name": "Oakland A’s", "value": 507.0, "rank": 1}, {"team_id": 1, "team_name": "Miami Marlins", "value": 506.0, "rank": 2}, {"team_id": 11, "team_name": "New York Yankees", "value": 459.0, "rank": 3}, {"team_id": 8, "team_name": "Toronto Blue Jays ", "value": 455.0, "rank": 4}, {"team_id": 3, "team_name": "Minnesota Twins", "value": 453.0, "rank": 5}, {"team_id": 4, "team_name": "St. Louis Cardinals", "value": 444.0, "rank": 6}, {"team_id": 7, "team_name": "Boston Red Sox", "value": 426.0, "rank": 7}, {"team_id": 9, "team_name": "Montreal Expos", "value": 420.0, "rank": 8}, {"team_id": 10, "team_name": "Seattle Mariners", "value": 417.0, "rank": 9}, {"team_id": 12, "team_name": "San Francisco Giants", "value": 412.0, "rank": 10}, {"team_id": 6, "team_name": "Colorado Rockies", "value": 409.0, "rank": 11}, {"team_id": 2, "team_name": "Chicago Cubs", "value": 365.0, "rank": 12}]}, {"stat_id": 5, "name": "HR", "label": "Home Runs", "lower_better": false, "teams": [{"team_id": 1, "team_name": "Miami Marlins", "value": 155.0, "rank": 1}, {"team_id": 5, "team_name": "Oakland A’s", "value": 146.0, "rank": 2}, {"team_id": 8, "team_name": "Toronto Blue Jays ", "value": 123.0, "rank": 3}, {"team_id": 10, "team_name": "Seattle Mariners", "value": 116.0, "rank": 4}, {"team_id": 11, "team_name": "New York Yankees", "value": 115.0, "rank": 5}, {"team_id": 12, "team_name": "San Francisco Giants", "value": 114.0, "rank": 6}, {"team_id": 9, "team_name": "Montreal Expos", "value": 107.0, "rank": 7}, {"team_id": 7, "team_name": "Boston Red Sox", "value": 105.0, "rank": 8}, {"team_id": 4, "team_name": "St. Louis Cardinals", "value": 104.0, "rank": 9}, {"team_id": 6, "team_name": "Colorado Rockies", "value": 99.0, "rank": 10}, {"team_id": 3, "team_name": "Minnesota Twins", "value": 96.0, "rank": 11}, {"team_id": 2, "team_name": "Chicago Cubs", "value": 89.0, "rank": 12}]}, {"stat_id": 21, "name": "RBI", "label": "RBI", "lower_better": false, "teams": [{"team_id": 1, "team_name": "Miami Marlins", "value": 517.0, "rank": 1}, {"team_id": 8, "team_name": "Toronto Blue Jays ", "value": 451.0, "rank": 2}, {"team_id": 5, "team_name": "Oakland A’s", "value": 450.0, "rank": 3}, {"team_id": 11, "team_name": "New York Yankees", "value": 445.0, "rank": 4}, {"team_id": 10, "team_name": "Seattle Mariners", "value": 417.0, "rank": 5}, {"team_id": 7, "team_name": "Boston Red Sox", "value": 405.0, "rank": 6}, {"team_id": 4, "team_name": "St. Louis Cardinals", "value": 392.0, "rank": 7}, {"team_id": 12, "team_name": "San Francisco Giants", "value": 382.0, "rank": 8}, {"team_id": 3, "team_name": "Minnesota Twins", "value": 381.0, "rank": 9}, {"team_id": 6, "team_name": "Colorado Rockies", "value": 369.0, "rank": 10}, {"team_id": 9, "team_name": "Montreal Expos", "value": 365.0, "rank": 11}, {"team_id": 2, "team_name": "Chicago Cubs", "value": 337.0, "rank": 12}]}, {"stat_id": 23, "name": "SB", "label": "Stolen Bases", "lower_better": false, "teams": [{"team_id": 5, "team_name": "Oakland A’s", "value": 85.0, "rank": 1}, {"team_id": 6, "team_name": "Colorado Rockies", "value": 82.0, "rank": 2}, {"team_id": 12, "team_name": "San Francisco Giants", "value": 81.0, "rank": 3}, {"team_id": 9, "team_name": "Montreal Expos", "value": 80.0, "rank": 4}, {"team_id": 10, "team_name": "Seattle Mariners", "value": 73.0, "rank": 5}, {"team_id": 7, "team_name": "Boston Red Sox", "value": 70.0, "rank": 6}, {"team_id": 11, "team_name": "New York Yankees", "value": 69.0, "rank": 7}, {"team_id": 4, "team_name": "St. Louis Cardinals", "value": 65.0, "rank": 8}, {"team_id": 3, "team_name": "Minnesota Twins", "value": 64.0, "rank": 9}, {"team_id": 1, "team_name": "Miami Marlins", "value": 63.0, "rank": 10}, {"team_id": 8, "team_name": "Toronto Blue Jays ", "value": 61.0, "rank": 11}, {"team_id": 2, "team_name": "Chicago Cubs", "value": 36.0, "rank": 12}]}, {"stat_id": 2, "name": "AVG", "label": "AVG", "lower_better": false, "teams": [{"team_id": 3, "team_name": "Minnesota Twins", "value": 0.25779967, "rank": 1}, {"team_id": 4, "team_name": "St. Louis Cardinals", "value": 0.25772539, "rank": 2}, {"team_id": 9, "team_name": "Montreal Expos", "value": 0.25469799, "rank": 3}, {"team_id": 6, "team_name": "Colorado Rockies", "value": 0.25310411, "rank": 4}, {"team_id": 5, "team_name": "Oakland A’s", "value": 0.24892581, "rank": 5}, {"team_id": 2, "team_name": "Chicago Cubs", "value": 0.24850405, "rank": 6}, {"team_id": 12, "team_name": "San Francisco Giants", "value": 0.24850016, "rank": 7}, {"team_id": 1, "team_name": "Miami Marlins", "value": 0.2440273, "rank": 8}, {"team_id": 8, "team_name": "Toronto Blue Jays ", "value": 0.24357812, "rank": 9}, {"team_id": 10, "team_name": "Seattle Mariners", "value": 0.24221453, "rank": 10}, {"team_id": 11, "team_name": "New York Yankees", "value": 0.24002494, "rank": 11}, {"team_id": 7, "team_name": "Boston Red Sox", "value": 0.2276181, "rank": 12}]}, {"stat_id": 18, "name": "OPS", "label": "OPS", "lower_better": false, "teams": [{"team_id": 3, "team_name": "Minnesota Twins", "value": 0.76060004, "rank": 1}, {"team_id": 5, "team_name": "Oakland A’s", "value": 0.76009412, "rank": 2}, {"team_id": 1, "team_name": "Miami Marlins", "value": 0.7589615, "rank": 3}, {"team_id": 9, "team_name": "Montreal Expos", "value": 0.75038492, "rank": 4}, {"team_id": 4, "team_name": "St. Louis Cardinals", "value": 0.74925942, "rank": 5}, {"team_id": 10, "team_name": "Seattle Mariners", "value": 0.73559675, "rank": 6}, {"team_id": 6, "team_name": "Colorado Rockies", "value": 0.73311715, "rank": 7}, {"team_id": 11, "team_name": "New York Yankees", "value": 0.732903, "rank": 8}, {"team_id": 8, "team_name": "Toronto Blue Jays ", "value": 0.72715228, "rank": 9}, {"team_id": 12, "team_name": "San Francisco Giants", "value": 0.72293118, "rank": 10}, {"team_id": 2, "team_name": "Chicago Cubs", "value": 0.7223099, "rank": 11}, {"team_id": 7, "team_name": "Boston Red Sox", "value": 0.70203983, "rank": 12}]}, {"stat_id": 53, "name": "W", "label": "Wins", "lower_better": false, "teams": [{"team_id": 6, "team_name": "Colorado Rockies", "value": 62.0, "rank": 1}, {"team_id": 1, "team_name": "Miami Marlins", "value": 46.0, "rank": 2}, {"team_id": 11, "team_name": "New York Yankees", "value": 43.0, "rank": 3}, {"team_id": 5, "team_name": "Oakland A’s", "value": 42.0, "rank": 4}, {"team_id": 3, "team_name": "Minnesota Twins", "value": 39.0, "rank": 5}, {"team_id": 4, "team_name": "St. Louis Cardinals", "value": 37.0, "rank": 6}, {"team_id": 10, "team_name": "Seattle Mariners", "value": 36.0, "rank": 7}, {"team_id": 9, "team_name": "Montreal Expos", "value": 33.0, "rank": 8}, {"team_id": 12, "team_name": "San Francisco Giants", "value": 33.0, "rank": 9}, {"team_id": 7, "team_name": "Boston Red Sox", "value": 31.0, "rank": 10}, {"team_id": 8, "team_name": "Toronto Blue Jays ", "value": 31.0, "rank": 11}, {"team_id": 2, "team_name": "Chicago Cubs", "value": 28.0, "rank": 12}]}, {"stat_id": 48, "name": "K", "label": "Strikeouts", "lower_better": false, "teams": [{"team_id": 6, "team_name": "Colorado Rockies", "value": 900.0, "rank": 1}, {"team_id": 1, "team_name": "Miami Marlins", "value": 716.0, "rank": 2}, {"team_id": 11, "team_name": "New York Yankees", "value": 696.0, "rank": 3}, {"team_id": 9, "team_name": "Montreal Expos", "value": 626.0, "rank": 4}, {"team_id": 10, "team_name": "Seattle Mariners", "value": 597.0, "rank": 5}, {"team_id": 2, "team_name": "Chicago Cubs", "value": 595.0, "rank": 6}, {"team_id": 5, "team_name": "Oakland A’s", "value": 585.0, "rank": 7}, {"team_id": 4, "team_name": "St. Louis Cardinals", "value": 571.0, "rank": 8}, {"team_id": 3, "team_name": "Minnesota Twins", "value": 551.0, "rank": 9}, {"team_id": 12, "team_name": "San Francisco Giants", "value": 534.0, "rank": 10}, {"team_id": 7, "team_name": "Boston Red Sox", "value": 518.0, "rank": 11}, {"team_id": 8, "team_name": "Toronto Blue Jays ", "value": 433.0, "rank": 12}]}, {"stat_id": 82, "name": "K/BB", "label": "K/BB", "lower_better": false, "teams": [{"team_id": 6, "team_name": "Colorado Rockies", "value": 3.8961039, "rank": 1}, {"team_id": 9, "team_name": "Montreal Expos", "value": 3.26041667, "rank": 2}, {"team_id": 11, "team_name": "New York Yankees", "value": 3.20737327, "rank": 3}, {"team_id": 1, "team_name": "Miami Marlins", "value": 3.15418502, "rank": 4}, {"team_id": 5, "team_name": "Oakland A’s", "value": 2.8125, "rank": 5}, {"team_id": 4, "team_name": "St. Louis Cardinals", "value": 2.79901961, "rank": 6}, {"team_id": 8, "team_name": "Toronto Blue Jays ", "value": 2.70625, "rank": 7}, {"team_id": 12, "team_name": "San Francisco Giants", "value": 2.68341709, "rank": 8}, {"team_id": 10, "team_name": "Seattle Mariners", "value": 2.54042553, "rank": 9}, {"team_id": 3, "team_name": "Minnesota Twins", "value": 2.51598174, "rank": 10}, {"team_id": 2, "team_name": "Chicago Cubs", "value": 2.48953975, "rank": 11}, {"team_id": 7, "team_name": "Boston Red Sox", "value": 2.16736402, "rank": 12}]}, {"stat_id": 83, "name": "SVHD", "label": "Saves+Holds", "lower_better": false, "teams": [{"team_id": 5, "team_name": "Oakland A’s", "value": 54.0, "rank": 1}, {"team_id": 4, "team_name": "St. Louis Cardinals", "value": 53.0, "rank": 2}, {"team_id": 12, "team_name": "San Francisco Giants", "value": 47.0, "rank": 3}, {"team_id": 3, "team_name": "Minnesota Twins", "value": 46.0, "rank": 4}, {"team_id": 11, "team_name": "New York Yankees", "value": 45.0, "rank": 5}, {"team_id": 10, "team_name": "Seattle Mariners", "value": 43.0, "rank": 6}, {"team_id": 1, "team_name": "Miami Marlins", "value": 39.0, "rank": 7}, {"team_id": 6, "team_name": "Colorado Rockies", "value": 38.0, "rank": 8}, {"team_id": 9, "team_name": "Montreal Expos", "value": 38.0, "rank": 9}, {"team_id": 2, "team_name": "Chicago Cubs", "value": 37.0, "rank": 10}, {"team_id": 7, "team_name": "Boston Red Sox", "value": 30.0, "rank": 11}, {"team_id": 8, "team_name": "Toronto Blue Jays ", "value": 29.0, "rank": 12}]}, {"stat_id": 47, "name": "ERA", "label": "ERA", "lower_better": true, "teams": [{"team_id": 6, "team_name": "Colorado Rockies", "value": 3.09302326, "rank": 1}, {"team_id": 3, "team_name": "Minnesota Twins", "value": 3.27700348, "rank": 2}, {"team_id": 12, "team_name": "San Francisco Giants", "value": 3.45867769, "rank": 3}, {"team_id": 5, "team_name": "Oakland A’s", "value": 3.58474576, "rank": 4}, {"team_id": 10, "team_name": "Seattle Mariners", "value": 3.86756757, "rank": 5}, {"team_id": 1, "team_name": "Miami Marlins", "value": 3.89473684, "rank": 6}, {"team_id": 9, "team_name": "Montreal Expos", "value": 3.91788526, "rank": 7}, {"team_id": 11, "team_name": "New York Yankees", "value": 3.93327068, "rank": 8}, {"team_id": 4, "team_name": "St. Louis Cardinals", "value": 4.08735757, "rank": 9}, {"team_id": 8, "team_name": "Toronto Blue Jays ", "value": 4.20944882, "rank": 10}, {"team_id": 2, "team_name": "Chicago Cubs", "value": 4.22362205, "rank": 11}, {"team_id": 7, "team_name": "Boston Red Sox", "value": 4.88442211, "rank": 12}]}, {"stat_id": 41, "name": "WHIP", "label": "WHIP", "lower_better": true, "teams": [{"team_id": 6, "team_name": "Colorado Rockies", "value": 1.12144703, "rank": 1}, {"team_id": 12, "team_name": "San Francisco Giants", "value": 1.15997639, "rank": 2}, {"team_id": 1, "team_name": "Miami Marlins", "value": 1.18567251, "rank": 3}, {"team_id": 5, "team_name": "Oakland A’s", "value": 1.19830508, "rank": 4}, {"team_id": 11, "team_name": "New York Yankees", "value": 1.20112782, "rank": 5}, {"team_id": 9, "team_name": "Montreal Expos", "value": 1.20134983, "rank": 6}, {"team_id": 3, "team_name": "Minnesota Twins", "value": 1.20209059, "rank": 7}, {"team_id": 4, "team_name": "St. Louis Cardinals", "value": 1.21920781, "rank": 8}, {"team_id": 2, "team_name": "Chicago Cubs", "value": 1.26614173, "rank": 9}, {"team_id": 8, "team_name": "Toronto Blue Jays ", "value": 1.26614173, "rank": 10}, {"team_id": 10, "team_name": "Seattle Mariners", "value": 1.28108108, "rank": 11}, {"team_id": 7, "team_name": "Boston Red Sox", "value": 1.44556114, "rank": 12}]}]};
 const SCOREBOARD_DATA = {"week": 11, "scoring_period": 76, "my_team": "San Francisco Giants", "opp_team": "St. Louis Cardinals", "my_wins": 0, "opp_wins": 0, "ties": 12, "winner": "UNDECIDED", "categories": [{"stat_id": 20, "name": "R", "label": "Runs", "my_score": 0.0, "opp_score": 0.0, "result": "TIE", "lower_better": false, "ineligible": false}, {"stat_id": 5, "name": "HR", "label": "Home Runs", "my_score": 0.0, "opp_score": 0.0, "result": "TIE", "lower_better": false, "ineligible": false}, {"stat_id": 21, "name": "RBI", "label": "RBI", "my_score": 0.0, "opp_score": 0.0, "result": "TIE", "lower_better": false, "ineligible": false}, {"stat_id": 23, "name": "SB", "label": "Stolen Bases", "my_score": 0.0, "opp_score": 0.0, "result": "TIE", "lower_better": false, "ineligible": false}, {"stat_id": 2, "name": "AVG", "label": "AVG", "my_score": 0.0, "opp_score": 0.0, "result": "TIE", "lower_better": false, "ineligible": false}, {"stat_id": 18, "name": "OPS", "label": "OPS", "my_score": 0.0, "opp_score": 0.0, "result": "TIE", "lower_better": false, "ineligible": false}, {"stat_id": 53, "name": "W", "label": "Wins", "my_score": 0.0, "opp_score": 0.0, "result": "TIE", "lower_better": false, "ineligible": false}, {"stat_id": 48, "name": "K", "label": "Strikeouts", "my_score": 0.0, "opp_score": 0.0, "result": "TIE", "lower_better": false, "ineligible": false}, {"stat_id": 82, "name": "K/BB", "label": "K/BB", "my_score": 0.0, "opp_score": 0.0, "result": "TIE", "lower_better": false, "ineligible": true}, {"stat_id": 83, "name": "SVHD", "label": "Saves+Holds", "my_score": 0.0, "opp_score": 0.0, "result": "TIE", "lower_better": false, "ineligible": false}, {"stat_id": 47, "name": "ERA", "label": "ERA", "my_score": null, "opp_score": null, "result": "TIE", "lower_better": true, "ineligible": true}, {"stat_id": 41, "name": "WHIP", "label": "WHIP", "my_score": null, "opp_score": null, "result": "TIE", "lower_better": true, "ineligible": true}], "generated": "2026-06-08T14:16:23.836832+00:00"};
 
 const DEFAULT_BRIAN_HITTER_IDS  = ["31539", "11579", "19608", "13510", "31347", "19556", "30116", "32127", "21842", "27676", "13066"];
@@ -1836,9 +1871,143 @@ function resetRoster() {
 }
 
 
+// ── League Category Stats ────────────────────────────────────────────────────
+let leagueSortState = { col: null, dir: 'desc' };
+
+function rankTier(rank, total) {
+  const pct = rank / total;
+  if (pct <= 0.33) return 'top';
+  if (pct <= 0.67) return 'mid';
+  return 'bottom';
+}
+
+function fmtLeagueVal(val, statName) {
+  if (val === null || val === undefined) return '—';
+  if (['AVG', 'OPS', 'WHIP', 'K/BB', 'ERA'].includes(statName)) return val.toFixed(3);
+  return Math.round(val).toString();
+}
+
+function renderLeagueStats() {
+  const el = document.getElementById('league-stats-content');
+  const ld = LEAGUE_STATS_DATA;
+
+  if (!ld) {
+    el.innerHTML = `<div class="section-title">League Category Rankings</div><div class="sb-stale-notice">No league stats loaded. Run <code>python espn_league_stats.py</code> to fetch season totals.</div>`;
+    return;
+  }
+
+  const myId   = ld.my_team_id;
+  const total  = ld.total_teams;
+  const cats   = ld.categories;
+
+  // ── Rank summary cards ────────────────────────────────────────────────────
+  let cardsHtml = '';
+  for (const cat of cats) {
+    const me = cat.teams.find(t => t.team_id === myId);
+    if (!me) continue;
+    const tier = rankTier(me.rank, total);
+    cardsHtml += `<div class="rank-card ${tier}">
+      <div class="rc-stat">${cat.name}</div>
+      <div class="rc-rank">${me.rank}<span style="font-size:14px;color:var(--muted)">/${total}</span></div>
+      <div class="rc-val">${fmtLeagueVal(me.value, cat.name)}</div>
+    </div>`;
+  }
+
+  // ── Sortable full table ───────────────────────────────────────────────────
+  // Build team rows: {team_id, team_name, stats: {name: value}}
+  const teamMap = {};
+  for (const cat of cats) {
+    for (const t of cat.teams) {
+      if (!teamMap[t.team_id]) teamMap[t.team_id] = { team_id: t.team_id, team_name: t.team_name, stats: {}, ranks: {} };
+      teamMap[t.team_id].stats[cat.name] = t.value;
+      teamMap[t.team_id].ranks[cat.name] = t.rank;
+    }
+  }
+
+  const catNames = cats.map(c => c.name);
+  const catMeta  = Object.fromEntries(cats.map(c => [c.name, c]));
+
+  function buildTableHtml(sortCol, sortDir) {
+    let rows = Object.values(teamMap);
+    if (sortCol) {
+      const lb = catMeta[sortCol]?.lower_better;
+      rows.sort((a, b) => {
+        const av = a.stats[sortCol] ?? (lb ? Infinity : -Infinity);
+        const bv = b.stats[sortCol] ?? (lb ? Infinity : -Infinity);
+        return sortDir === 'asc' ? av - bv : bv - av;
+      });
+    } else {
+      // Default: sort by total rank score (sum of ranks, lower = better)
+      rows.sort((a, b) => {
+        const sa = Object.values(a.ranks).reduce((x, r) => x + r, 0);
+        const sb = Object.values(b.ranks).reduce((x, r) => x + r, 0);
+        return sa - sb;
+      });
+    }
+
+    let headerCols = catNames.map(n => {
+      const cls = sortCol === n ? (sortDir === 'asc' ? 'sort-asc' : 'sort-desc') : '';
+      return `<th class="${cls}" onclick="leagueSort('${n}')" title="${catMeta[n].label}">${n}</th>`;
+    }).join('');
+
+    let bodyRows = rows.map(t => {
+      const isMe = t.team_id === myId;
+      let cells = catNames.map(n => {
+        const val  = t.stats[n];
+        const rank = t.ranks[n];
+        const tier = rankTier(rank, total);
+        const fmt  = fmtLeagueVal(val, n);
+        return `<td class="lt-num"><span class="lt-rank-badge ${tier}">${fmt}</span></td>`;
+      }).join('');
+      return `<tr class="${isMe ? 'my-row' : ''}">
+        <td class="lt-name">${isMe ? '★ ' : ''}${t.team_name}</td>
+        ${cells}
+      </tr>`;
+    }).join('');
+
+    return `<table class="league-table">
+      <thead><tr>
+        <th onclick="leagueSort(null)" style="min-width:160px">Team</th>
+        ${headerCols}
+      </tr></thead>
+      <tbody>${bodyRows}</tbody>
+    </table>`;
+  }
+
+  const gen = ld.generated ? new Date(ld.generated).toLocaleString() : '';
+
+  el.innerHTML = `
+    <div class="section-title" style="margin-bottom:16px">League Category Rankings</div>
+    ${gen ? `<div style="font-family:'DM Mono',monospace;font-size:10px;color:var(--muted);margin-bottom:16px">Updated ${gen}</div>` : ''}
+    <div class="league-rank-grid">${cardsHtml}</div>
+    <div class="section-title" style="margin-bottom:12px">All Teams — Season Totals</div>
+    <div class="league-table-wrap" id="league-table-container">
+      ${buildTableHtml(leagueSortState.col, leagueSortState.dir)}
+    </div>`;
+
+  // Store build fn for re-sort
+  el._buildTableHtml = buildTableHtml;
+}
+
+function leagueSort(col) {
+  if (leagueSortState.col === col) {
+    leagueSortState.dir = leagueSortState.dir === 'desc' ? 'asc' : 'desc';
+  } else {
+    const cat = LEAGUE_STATS_DATA?.categories.find(c => c.name === col);
+    leagueSortState.col = col;
+    leagueSortState.dir = col === null ? 'asc' : (cat?.lower_better ? 'asc' : 'desc');
+  }
+  const el = document.getElementById('league-stats-content');
+  if (el?._buildTableHtml) {
+    document.getElementById('league-table-container').innerHTML =
+      el._buildTableHtml(leagueSortState.col, leagueSortState.dir);
+  }
+}
+
 function renderRosterTab() {
   renderRosterList('hitter');
   renderRosterList('pitcher');
+  renderLeagueStats();
 }
 
 function renderRosterList(type) {

@@ -63,7 +63,8 @@ Steps 1, 2, 4, and 5 can run in parallel. Step 3 handles its own commit and push
 When the user asks to update the projection data in the HTML, run this Python snippet inline (no separate script needed). It reads the four CSVs, merges on `PlayerId`, regenerates `HITTERS_DATA` and `PITCHERS_DATA` in both HTML files (line numbers detected dynamically), and skips the commit if nothing changed.
 
 ```python
-import pandas as pd, json
+import pandas as pd, json, re
+from datetime import date
 
 pre_h = pd.read_csv('fangraphs-preseason-hitters-projections-2026.csv')
 cur_h = pd.read_csv('fangraphs-hitters-current.csv')
@@ -75,6 +76,12 @@ for df in [pre_h, cur_h, pre_p, cur_p]:
 
 with open('baseball_analyzer_interactive.html') as f:
     lines = f.readlines()
+
+original_lines = lines[:]  # snapshot for change detection
+
+# Update subtitle date to today
+today_str = date.today().strftime('%b %-d, %Y')  # e.g. "Jul 14, 2026"
+lines = [re.sub(r'Preseason vs Current \([^)]+\)', f'Preseason vs Current ({today_str})', l) for l in lines]
 
 # Find data lines dynamically
 h_idx = next(i for i, l in enumerate(lines) if l.startswith('const HITTERS_DATA'))
@@ -127,15 +134,13 @@ for _, row in merged_p.iterrows():
             'WHIP': {'pre': round(float(row['WHIP_pre']), 6), 'cur': round(float(row['WHIP_cur']), 6)},
         }, 'pos': pos})
 
-h_new = 'const HITTERS_DATA = ' + json.dumps(hitters_json, ensure_ascii=False) + ';\n'
-p_new = 'const PITCHERS_DATA = ' + json.dumps(pitchers_json, ensure_ascii=False) + ';\n'
+lines[h_idx] = 'const HITTERS_DATA = ' + json.dumps(hitters_json, ensure_ascii=False) + ';\n'
+lines[p_idx] = 'const PITCHERS_DATA = ' + json.dumps(pitchers_json, ensure_ascii=False) + ';\n'
 
-# Skip if data unchanged
-if lines[h_idx] == h_new and lines[p_idx] == p_new:
+# Skip if nothing changed (data + date)
+if lines == original_lines:
     print("Data unchanged — no update needed.")
 else:
-    lines[h_idx] = h_new
-    lines[p_idx] = p_new
     for fname in ['baseball_analyzer_interactive.html', 'index.html']:
         with open(fname, 'w') as f:
             f.writelines(lines)

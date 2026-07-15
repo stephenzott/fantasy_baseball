@@ -1,6 +1,6 @@
 {
-  "generated": "2026-06-08T14:24:23.949793+00:00",
-  "scoring_period": 76,
+  "generated": "2026-07-15T01:28:16.353878+00:00",
+  "scoring_period": 112,
   "my_team_id": 12,
   "total_teams": 12,
   "categories": [
@@ -11,75 +11,75 @@
       "lower_better": false,
       "teams": [
         {
-          "team_id": 5,
-          "team_name": "Oakland A\u2019s",
-          "value": 507.0,
+          "team_id": 1,
+          "team_name": "Miami Marlins",
+          "value": 776.0,
           "rank": 1
         },
         {
-          "team_id": 1,
-          "team_name": "Miami Marlins",
-          "value": 506.0,
+          "team_id": 5,
+          "team_name": "Oakland A\u2019s",
+          "value": 775.0,
           "rank": 2
         },
         {
           "team_id": 11,
           "team_name": "New York Yankees",
-          "value": 459.0,
+          "value": 697.0,
           "rank": 3
         },
         {
           "team_id": 8,
           "team_name": "Toronto Blue Jays ",
-          "value": 455.0,
+          "value": 672.0,
           "rank": 4
         },
         {
           "team_id": 3,
           "team_name": "Minnesota Twins",
-          "value": 453.0,
+          "value": 659.0,
           "rank": 5
         },
         {
           "team_id": 4,
           "team_name": "St. Louis Cardinals",
-          "value": 444.0,
+          "value": 653.0,
           "rank": 6
         },
         {
-          "team_id": 7,
-          "team_name": "Boston Red Sox",
-          "value": 426.0,
+          "team_id": 6,
+          "team_name": "Colorado Rockies",
+          "value": 638.0,
           "rank": 7
         },
         {
           "team_id": 9,
           "team_name": "Montreal Expos",
-          "value": 420.0,
+          "value": 628.0,
           "rank": 8
         },
         {
           "team_id": 10,
           "team_name": "Seattle Mariners",
-          "value": 417.0,
+          "value": 619.0,
           "rank": 9
+        },
+        {
+          "team_id": 7,
+          "team_name": "Boston Red Sox",
+          "value": 618.0,
+          "rank": 10
         },
         {
           "team_id": 12,
           "team_name": "San Francisco Giants",
-          "value": 412.0,
-          "rank": 10
-        },
-        {
-          "team_id": 6,
-          "team_name": "Colorado Rockies",
-          "value": 409.0,
+          "value": 585.0,
           "rank": 11
         },
         {
           "team_id": 2,
           "team_name": "Chicago Cubs",
-          "value": 365.0,
+          "value": 550.0,
           "rank": 12
         }
       ]
@@ -93,73 +93,73 @@
         {
           "team_id": 1,
           "team_name": "Miami Marlins",
-          "value": 155.0,
+          "value": 246.0,
           "rank": 1
         },
         {
           "team_id": 5,
           "team_name": "Oakland A\u2019s",
-          "value": 146.0,
+          "value": 238.0,
           "rank": 2
         },
         {
           "team_id": 8,
           "team_name": "Toronto Blue Jays ",
-          "value": 123.0,
+          "value": 188.0,
           "rank": 3
-        },
-        {
-          "team_id": 10,
-          "team_name": "Seattle Mariners",
-          "value": 116.0,
-          "rank": 4
         },
         {
           "team_id": 11,
           "team_name": "New York Yankees",
-          "value": 115.0,
-          "rank": 5
+          "value": 188.0,
+          "rank": 4
         },
         {
-          "team_id": 12,
-          "team_name": "San Francisco Giants",
-          "value": 114.0,
-          "rank": 6
+          "team_id": 10,
+          "team_name": "Seattle Mariners",
+          "value": 171.0,
+          "rank": 5
         },
         {
           "team_id": 9,
           "team_name": "Montreal Expos",
-          "value": 107.0,
-          "rank": 7
-        },
-        {
-          "team_id": 7,
-          "team_name": "Boston Red Sox",
-          "value": 105.0,
-          "rank": 8
-        },
-        {
-          "team_id": 4,
-          "team_name": "St. Louis Cardinals",
-          "value": 104.0,
-          "rank": 9
-        },
-        {
-          "team_id": 6,
-          "team_name": "Colorado Rockies",
-          "value": 99.0,
-          "rank": 10
+          "value": 170.0,
+          "rank": 6
         },
         {
           "team_id": 3,
           "team_name": "Minnesota Twins",
-          "value": 96.0,
+          "value": 168.0,
+          "rank": 7
+        },
+        {
+          "team_id": 4,
+          "team_name": "St. Louis Cardinals",
+          "value": 167.0,
+          "rank": 8
+        },
+        {
+          "team_id": 6,
+          "team_name": "Colorado Rockies",
+          "value": 163.0,
+          "rank": 9
+        },
+        {
+          "team_id": 7,
+          "team_name": "Boston Red Sox",
+          "value": 163.0,
+          "rank": 10
+        },
+        {
+          "team_id": 12,
+          "team_name": "San Francisco Giants",
+          "value": 160.0,
           "rank": 11
         },
         {
           "team_id": 2,
           "team_name": "Chicago Cubs",
-          "value": 89.0,
+          "value": 144.0,
           "rank": 12
         }
       ]
@@ -173,73 +173,73 @@
         {
           "team_id": 1,
           "team_name": "Miami Marlins",
-          "value": 517.0,
+          "value": 799.0,
           "rank": 1
-        },
-        {
-          "team_id": 8,
-          "team_name": "Toronto Blue Jays ",
-          "value": 451.0,
-          "rank": 2
         },
         {
           "team_id": 5,
           "team_name": "Oakland A\u2019s",
-          "value": 450.0,
-          "rank": 3
+          "value": 717.0,
+          "rank": 2
         },
         {
           "team_id": 11,
           "team_name": "New York Yankees",
-          "value": 445.0,
+          "value": 671.0,
+          "rank": 3
+        },
+        {
+          "team_id": 8,
+          "team_name": "Toronto Blue Jays ",
+          "value": 669.0,
           "rank": 4
         },
         {
-          "team_id": 10,
-          "team_name": "Seattle Mariners",
-          "value": 417.0,
+          "team_id": 4,
+          "team_name": "St. Louis Cardinals",
+          "value": 623.0,
           "rank": 5
         },
         {
           "team_id": 7,
           "team_name": "Boston Red Sox",
-          "value": 405.0,
+          "value": 610.0,
           "rank": 6
         },
         {
-          "team_id": 4,
-          "team_name": "St. Louis Cardinals",
-          "value": 392.0,
+          "team_id": 10,
+          "team_name": "Seattle Mariners",
+          "value": 592.0,
           "rank": 7
-        },
-        {
-          "team_id": 12,
-          "team_name": "San Francisco Giants",
-          "value": 382.0,
-          "rank": 8
         },
         {
           "team_id": 3,
           "team_name": "Minnesota Twins",
-          "value": 381.0,
-          "rank": 9
+          "value": 582.0,
+          "rank": 8
         },
         {
           "team_id": 6,
           "team_name": "Colorado Rockies",
-          "value": 369.0,
-          "rank": 10
+          "value": 571.0,
+          "rank": 9
         },
         {
           "team_id": 9,
           "team_name": "Montreal Expos",
-          "value": 365.0,
+          "value": 555.0,
+          "rank": 10
+        },
+        {
+          "team_id": 12,
+          "team_name": "San Francisco Giants",
+          "value": 543.0,
           "rank": 11
         },
         {
           "team_id": 2,
           "team_name": "Chicago Cubs",
-          "value": 337.0,
+          "value": 523.0,
           "rank": 12
         }
       ]
@@ -251,75 +251,75 @@
       "lower_better": false,
       "teams": [
         {
-          "team_id": 5,
-          "team_name": "Oakland A\u2019s",
-          "value": 85.0,
+          "team_id": 11,
+          "team_name": "New York Yankees",
+          "value": 113.0,
           "rank": 1
-        },
-        {
-          "team_id": 6,
-          "team_name": "Colorado Rockies",
-          "value": 82.0,
-          "rank": 2
         },
         {
           "team_id": 12,
           "team_name": "San Francisco Giants",
-          "value": 81.0,
-          "rank": 3
+          "value": 111.0,
+          "rank": 2
         },
         {
-          "team_id": 9,
-          "team_name": "Montreal Expos",
-          "value": 80.0,
-          "rank": 4
+          "team_id": 5,
+          "team_name": "Oakland A\u2019s",
+          "value": 110.0,
+          "rank": 3
         },
         {
           "team_id": 10,
           "team_name": "Seattle Mariners",
-          "value": 73.0,
+          "value": 110.0,
+          "rank": 4
+        },
+        {
+          "team_id": 6,
+          "team_name": "Colorado Rockies",
+          "value": 108.0,
           "rank": 5
         },
         {
-          "team_id": 7,
-          "team_name": "Boston Red Sox",
-          "value": 70.0,
+          "team_id": 9,
+          "team_name": "Montreal Expos",
+          "value": 105.0,
           "rank": 6
-        },
-        {
-          "team_id": 11,
-          "team_name": "New York Yankees",
-          "value": 69.0,
-          "rank": 7
-        },
-        {
-          "team_id": 4,
-          "team_name": "St. Louis Cardinals",
-          "value": 65.0,
-          "rank": 8
-        },
-        {
-          "team_id": 3,
-          "team_name": "Minnesota Twins",
-          "value": 64.0,
-          "rank": 9
-        },
-        {
-          "team_id": 1,
-          "team_name": "Miami Marlins",
-          "value": 63.0,
-          "rank": 10
         },
         {
           "team_id": 8,
           "team_name": "Toronto Blue Jays ",
-          "value": 61.0,
+          "value": 102.0,
+          "rank": 7
+        },
+        {
+          "team_id": 1,
+          "team_name": "Miami Marlins",
+          "value": 98.0,
+          "rank": 8
+        },
+        {
+          "team_id": 7,
+          "team_name": "Boston Red Sox",
+          "value": 95.0,
+          "rank": 9
+        },
+        {
+          "team_id": 4,
+          "team_name": "St. Louis Cardinals",
+          "value": 92.0,
+          "rank": 10
+        },
+        {
+          "team_id": 3,
+          "team_name": "Minnesota Twins",
+          "value": 88.0,
           "rank": 11
         },
         {
           "team_id": 2,
           "team_name": "Chicago Cubs",
-          "value": 36.0,
+          "value": 61.0,
           "rank": 12
         }
       ]
@@ -331,75 +331,75 @@
       "lower_better": false,
       "teams": [
         {
-          "team_id": 3,
-          "team_name": "Minnesota Twins",
-          "value": 0.25779967,
+          "team_id": 9,
+          "team_name": "Montreal Expos",
+          "value": 0.25842436,
           "rank": 1
         },
         {
           "team_id": 4,
           "team_name": "St. Louis Cardinals",
-          "value": 0.25772539,
+          "value": 0.25674218,
           "rank": 2
         },
         {
-          "team_id": 9,
-          "team_name": "Montreal Expos",
-          "value": 0.25469799,
+          "team_id": 3,
+          "team_name": "Minnesota Twins",
+          "value": 0.25537695,
           "rank": 3
         },
         {
           "team_id": 6,
           "team_name": "Colorado Rockies",
-          "value": 0.25310411,
+          "value": 0.25428449,
           "rank": 4
+        },
+        {
+          "team_id": 1,
+          "team_name": "Miami Marlins",
+          "value": 0.25409994,
+          "rank": 5
         },
         {
           "team_id": 5,
           "team_name": "Oakland A\u2019s",
-          "value": 0.24892581,
-          "rank": 5
-        },
-        {
-          "team_id": 2,
-          "team_name": "Chicago Cubs",
-          "value": 0.24850405,
+          "value": 0.25391607,
           "rank": 6
         },
         {
           "team_id": 12,
           "team_name": "San Francisco Giants",
-          "value": 0.24850016,
+          "value": 0.25107442,
           "rank": 7
-        },
-        {
-          "team_id": 1,
-          "team_name": "Miami Marlins",
-          "value": 0.2440273,
-          "rank": 8
         },
         {
           "team_id": 8,
           "team_name": "Toronto Blue Jays ",
-          "value": 0.24357812,
-          "rank": 9
+          "value": 0.25005111,
+          "rank": 8
         },
         {
-          "team_id": 10,
-          "team_name": "Seattle Mariners",
-          "value": 0.24221453,
-          "rank": 10
+          "team_id": 2,
+          "team_name": "Chicago Cubs",
+          "value": 0.24805103,
+          "rank": 9
         },
         {
           "team_id": 11,
           "team_name": "New York Yankees",
-          "value": 0.24002494,
+          "value": 0.24400331,
+          "rank": 10
+        },
+        {
+          "team_id": 10,
+          "team_name": "Seattle Mariners",
+          "value": 0.23760287,
           "rank": 11
         },
         {
           "team_id": 7,
           "team_name": "Boston Red Sox",
-          "value": 0.2276181,
+          "value": 0.2348187,
           "rank": 12
         }
       ]
@@ -411,75 +411,75 @@
       "lower_better": false,
       "teams": [
         {
-          "team_id": 3,
-          "team_name": "Minnesota Twins",
-          "value": 0.76060004,
+          "team_id": 1,
+          "team_name": "Miami Marlins",
+          "value": 0.79159625,
           "rank": 1
         },
         {
           "team_id": 5,
           "team_name": "Oakland A\u2019s",
-          "value": 0.76009412,
+          "value": 0.77983651,
           "rank": 2
         },
         {
-          "team_id": 1,
-          "team_name": "Miami Marlins",
-          "value": 0.7589615,
+          "team_id": 3,
+          "team_name": "Minnesota Twins",
+          "value": 0.77195947,
           "rank": 3
         },
         {
           "team_id": 9,
           "team_name": "Montreal Expos",
-          "value": 0.75038492,
+          "value": 0.76477391,
           "rank": 4
         },
         {
           "team_id": 4,
           "team_name": "St. Louis Cardinals",
-          "value": 0.74925942,
+          "value": 0.75423245,
           "rank": 5
-        },
-        {
-          "team_id": 10,
-          "team_name": "Seattle Mariners",
-          "value": 0.73559675,
-          "rank": 6
         },
         {
           "team_id": 6,
           "team_name": "Colorado Rockies",
-          "value": 0.73311715,
-          "rank": 7
+          "value": 0.74549653,
+          "rank": 6
         },
         {
           "team_id": 11,
           "team_name": "New York Yankees",
-          "value": 0.732903,
-          "rank": 8
+          "value": 0.74525189,
+          "rank": 7
         },
         {
           "team_id": 8,
           "team_name": "Toronto Blue Jays ",
-          "value": 0.72715228,
-          "rank": 9
+          "value": 0.74058351,
+          "rank": 8
         },
         {
           "team_id": 12,
           "team_name": "San Francisco Giants",
-          "value": 0.72293118,
-          "rank": 10
+          "value": 0.73031277,
+          "rank": 9
         },
         {
           "team_id": 2,
           "team_name": "Chicago Cubs",
-          "value": 0.7223099,
+          "value": 0.72851287,
+          "rank": 10
+        },
+        {
+          "team_id": 10,
+          "team_name": "Seattle Mariners",
+          "value": 0.71649631,
           "rank": 11
         },
         {
           "team_id": 7,
           "team_name": "Boston Red Sox",
-          "value": 0.70203983,
+          "value": 0.71273416,
           "rank": 12
         }
       ]
@@ -493,73 +493,73 @@
         {
           "team_id": 6,
           "team_name": "Colorado Rockies",
-          "value": 62.0,
+          "value": 91.0,
           "rank": 1
-        },
-        {
-          "team_id": 1,
-          "team_name": "Miami Marlins",
-          "value": 46.0,
-          "rank": 2
         },
         {
           "team_id": 11,
           "team_name": "New York Yankees",
-          "value": 43.0,
+          "value": 71.0,
+          "rank": 2
+        },
+        {
+          "team_id": 1,
+          "team_name": "Miami Marlins",
+          "value": 69.0,
           "rank": 3
         },
         {
           "team_id": 5,
           "team_name": "Oakland A\u2019s",
-          "value": 42.0,
+          "value": 63.0,
           "rank": 4
         },
         {
           "team_id": 3,
           "team_name": "Minnesota Twins",
-          "value": 39.0,
+          "value": 60.0,
           "rank": 5
         },
         {
           "team_id": 4,
           "team_name": "St. Louis Cardinals",
-          "value": 37.0,
+          "value": 57.0,
           "rank": 6
-        },
-        {
-          "team_id": 10,
-          "team_name": "Seattle Mariners",
-          "value": 36.0,
-          "rank": 7
-        },
-        {
-          "team_id": 9,
-          "team_name": "Montreal Expos",
-          "value": 33.0,
-          "rank": 8
-        },
-        {
-          "team_id": 12,
-          "team_name": "San Francisco Giants",
-          "value": 33.0,
-          "rank": 9
         },
         {
           "team_id": 7,
           "team_name": "Boston Red Sox",
-          "value": 31.0,
-          "rank": 10
+          "value": 50.0,
+          "rank": 7
+        },
+        {
+          "team_id": 10,
+          "team_name": "Seattle Mariners",
+          "value": 50.0,
+          "rank": 8
+        },
+        {
+          "team_id": 9,
+          "team_name": "Montreal Expos",
+          "value": 49.0,
+          "rank": 9
         },
         {
           "team_id": 8,
           "team_name": "Toronto Blue Jays ",
-          "value": 31.0,
+          "value": 46.0,
+          "rank": 10
+        },
+        {
+          "team_id": 12,
+          "team_name": "San Francisco Giants",
+          "value": 45.0,
           "rank": 11
         },
         {
           "team_id": 2,
           "team_name": "Chicago Cubs",
-          "value": 28.0,
+          "value": 38.0,
           "rank": 12
         }
       ]
@@ -573,73 +573,73 @@
         {
           "team_id": 6,
           "team_name": "Colorado Rockies",
-          "value": 900.0,
+          "value": 1276.0,
           "rank": 1
         },
         {
           "team_id": 1,
           "team_name": "Miami Marlins",
-          "value": 716.0,
+          "value": 1121.0,
           "rank": 2
         },
         {
           "team_id": 11,
           "team_name": "New York Yankees",
-          "value": 696.0,
+          "value": 1027.0,
           "rank": 3
         },
         {
           "team_id": 9,
           "team_name": "Montreal Expos",
-          "value": 626.0,
+          "value": 961.0,
           "rank": 4
-        },
-        {
-          "team_id": 10,
-          "team_name": "Seattle Mariners",
-          "value": 597.0,
-          "rank": 5
-        },
-        {
-          "team_id": 2,
-          "team_name": "Chicago Cubs",
-          "value": 595.0,
-          "rank": 6
         },
         {
           "team_id": 5,
           "team_name": "Oakland A\u2019s",
-          "value": 585.0,
-          "rank": 7
+          "value": 902.0,
+          "rank": 5
+        },
+        {
+          "team_id": 10,
+          "team_name": "Seattle Mariners",
+          "value": 880.0,
+          "rank": 6
         },
         {
           "team_id": 4,
           "team_name": "St. Louis Cardinals",
-          "value": 571.0,
-          "rank": 8
+          "value": 872.0,
+          "rank": 7
         },
         {
           "team_id": 3,
           "team_name": "Minnesota Twins",
-          "value": 551.0,
+          "value": 858.0,
+          "rank": 8
+        },
+        {
+          "team_id": 2,
+          "team_name": "Chicago Cubs",
+          "value": 798.0,
           "rank": 9
         },
         {
           "team_id": 12,
           "team_name": "San Francisco Giants",
-          "value": 534.0,
+          "value": 798.0,
           "rank": 10
         },
         {
           "team_id": 7,
           "team_name": "Boston Red Sox",
-          "value": 518.0,
+          "value": 756.0,
           "rank": 11
         },
         {
           "team_id": 8,
           "team_name": "Toronto Blue Jays ",
-          "value": 433.0,
+          "value": 674.0,
           "rank": 12
         }
       ]
@@ -653,73 +653,73 @@
         {
           "team_id": 6,
           "team_name": "Colorado Rockies",
-          "value": 3.8961039,
+          "value": 4.07667732,
           "rank": 1
-        },
-        {
-          "team_id": 9,
-          "team_name": "Montreal Expos",
-          "value": 3.26041667,
-          "rank": 2
         },
         {
           "team_id": 11,
           "team_name": "New York Yankees",
-          "value": 3.20737327,
+          "value": 3.41196013,
+          "rank": 2
+        },
+        {
+          "team_id": 9,
+          "team_name": "Montreal Expos",
+          "value": 3.37192982,
           "rank": 3
         },
         {
           "team_id": 1,
           "team_name": "Miami Marlins",
-          "value": 3.15418502,
+          "value": 3.21203438,
           "rank": 4
         },
         {
           "team_id": 5,
           "team_name": "Oakland A\u2019s",
-          "value": 2.8125,
+          "value": 2.96710526,
           "rank": 5
         },
         {
           "team_id": 4,
           "team_name": "St. Louis Cardinals",
-          "value": 2.79901961,
+          "value": 2.96598639,
           "rank": 6
-        },
-        {
-          "team_id": 8,
-          "team_name": "Toronto Blue Jays ",
-          "value": 2.70625,
-          "rank": 7
         },
         {
           "team_id": 12,
           "team_name": "San Francisco Giants",
-          "value": 2.68341709,
-          "rank": 8
+          "value": 2.80985915,
+          "rank": 7
         },
         {
-          "team_id": 10,
-          "team_name": "Seattle Mariners",
-          "value": 2.54042553,
-          "rank": 9
+          "team_id": 8,
+          "team_name": "Toronto Blue Jays ",
+          "value": 2.7966805,
+          "rank": 8
         },
         {
           "team_id": 3,
           "team_name": "Minnesota Twins",
-          "value": 2.51598174,
-          "rank": 10
+          "value": 2.61585366,
+          "rank": 9
         },
         {
           "team_id": 2,
           "team_name": "Chicago Cubs",
-          "value": 2.48953975,
+          "value": 2.52531646,
+          "rank": 10
+        },
+        {
+          "team_id": 10,
+          "team_name": "Seattle Mariners",
+          "value": 2.5,
           "rank": 11
         },
         {
           "team_id": 7,
           "team_name": "Boston Red Sox",
-          "value": 2.16736402,
+          "value": 2.05434783,
           "rank": 12
         }
       ]
@@ -731,75 +731,75 @@
       "lower_better": false,
       "teams": [
         {
-          "team_id": 5,
-          "team_name": "Oakland A\u2019s",
-          "value": 54.0,
+          "team_id": 4,
+          "team_name": "St. Louis Cardinals",
+          "value": 80.0,
           "rank": 1
         },
         {
-          "team_id": 4,
-          "team_name": "St. Louis Cardinals",
-          "value": 53.0,
+          "team_id": 5,
+          "team_name": "Oakland A\u2019s",
+          "value": 77.0,
           "rank": 2
         },
         {
           "team_id": 12,
           "team_name": "San Francisco Giants",
-          "value": 47.0,
+          "value": 75.0,
           "rank": 3
         },
         {
           "team_id": 3,
           "team_name": "Minnesota Twins",
-          "value": 46.0,
+          "value": 72.0,
           "rank": 4
         },
         {
-          "team_id": 11,
-          "team_name": "New York Yankees",
-          "value": 45.0,
+          "team_id": 1,
+          "team_name": "Miami Marlins",
+          "value": 67.0,
           "rank": 5
         },
         {
           "team_id": 10,
           "team_name": "Seattle Mariners",
-          "value": 43.0,
+          "value": 66.0,
           "rank": 6
-        },
-        {
-          "team_id": 1,
-          "team_name": "Miami Marlins",
-          "value": 39.0,
-          "rank": 7
         },
         {
           "team_id": 6,
           "team_name": "Colorado Rockies",
-          "value": 38.0,
+          "value": 60.0,
+          "rank": 7
+        },
+        {
+          "team_id": 11,
+          "team_name": "New York Yankees",
+          "value": 59.0,
           "rank": 8
         },
         {
           "team_id": 9,
           "team_name": "Montreal Expos",
-          "value": 38.0,
+          "value": 55.0,
           "rank": 9
         },
         {
           "team_id": 2,
           "team_name": "Chicago Cubs",
-          "value": 37.0,
+          "value": 50.0,
           "rank": 10
-        },
-        {
-          "team_id": 7,
-          "team_name": "Boston Red Sox",
-          "value": 30.0,
-          "rank": 11
         },
         {
           "team_id": 8,
           "team_name": "Toronto Blue Jays ",
-          "value": 29.0,
+          "value": 46.0,
+          "rank": 11
+        },
+        {
+          "team_id": 7,
+          "team_name": "Boston Red Sox",
+          "value": 44.0,
           "rank": 12
         }
       ]
@@ -813,73 +813,73 @@
         {
           "team_id": 6,
           "team_name": "Colorado Rockies",
-          "value": 3.09302326,
+          "value": 3.1084991,
           "rank": 1
-        },
-        {
-          "team_id": 3,
-          "team_name": "Minnesota Twins",
-          "value": 3.27700348,
-          "rank": 2
-        },
-        {
-          "team_id": 12,
-          "team_name": "San Francisco Giants",
-          "value": 3.45867769,
-          "rank": 3
         },
         {
           "team_id": 5,
           "team_name": "Oakland A\u2019s",
-          "value": 3.58474576,
-          "rank": 4
+          "value": 3.63187641,
+          "rank": 2
         },
         {
-          "team_id": 10,
-          "team_name": "Seattle Mariners",
-          "value": 3.86756757,
-          "rank": 5
+          "team_id": 3,
+          "team_name": "Minnesota Twins",
+          "value": 3.70811018,
+          "rank": 3
         },
         {
           "team_id": 1,
           "team_name": "Miami Marlins",
-          "value": 3.89473684,
-          "rank": 6
-        },
-        {
-          "team_id": 9,
-          "team_name": "Montreal Expos",
-          "value": 3.91788526,
-          "rank": 7
+          "value": 3.75363725,
+          "rank": 4
         },
         {
           "team_id": 11,
           "team_name": "New York Yankees",
-          "value": 3.93327068,
-          "rank": 8
+          "value": 3.87109503,
+          "rank": 5
         },
         {
-          "team_id": 4,
-          "team_name": "St. Louis Cardinals",
-          "value": 4.08735757,
-          "rank": 9
+          "team_id": 12,
+          "team_name": "San Francisco Giants",
+          "value": 3.89454545,
+          "rank": 6
+        },
+        {
+          "team_id": 10,
+          "team_name": "Seattle Mariners",
+          "value": 3.92349927,
+          "rank": 7
         },
         {
           "team_id": 8,
           "team_name": "Toronto Blue Jays ",
-          "value": 4.20944882,
+          "value": 3.96676301,
+          "rank": 8
+        },
+        {
+          "team_id": 9,
+          "team_name": "Montreal Expos",
+          "value": 3.96763393,
+          "rank": 9
+        },
+        {
+          "team_id": 4,
+          "team_name": "St. Louis Cardinals",
+          "value": 4.11615245,
           "rank": 10
         },
         {
           "team_id": 2,
           "team_name": "Chicago Cubs",
-          "value": 4.22362205,
+          "value": 4.28555347,
           "rank": 11
         },
         {
           "team_id": 7,
           "team_name": "Boston Red Sox",
-          "value": 4.88442211,
+          "value": 4.93645485,
           "rank": 12
         }
       ]
@@ -893,73 +893,73 @@
         {
           "team_id": 6,
           "team_name": "Colorado Rockies",
-          "value": 1.12144703,
+          "value": 1.11211573,
           "rank": 1
-        },
-        {
-          "team_id": 12,
-          "team_name": "San Francisco Giants",
-          "value": 1.15997639,
-          "rank": 2
         },
         {
           "team_id": 1,
           "team_name": "Miami Marlins",
-          "value": 1.18567251,
-          "rank": 3
+          "value": 1.17264791,
+          "rank": 2
         },
         {
           "team_id": 5,
           "team_name": "Oakland A\u2019s",
-          "value": 1.19830508,
-          "rank": 4
+          "value": 1.19593067,
+          "rank": 3
         },
         {
           "team_id": 11,
           "team_name": "New York Yankees",
-          "value": 1.20112782,
+          "value": 1.20651102,
+          "rank": 4
+        },
+        {
+          "team_id": 3,
+          "team_name": "Minnesota Twins",
+          "value": 1.2096404,
           "rank": 5
         },
         {
           "team_id": 9,
           "team_name": "Montreal Expos",
-          "value": 1.20134983,
+          "value": 1.21205357,
           "rank": 6
         },
         {
-          "team_id": 3,
-          "team_name": "Minnesota Twins",
-          "value": 1.20209059,
+          "team_id": 12,
+          "team_name": "San Francisco Giants",
+          "value": 1.21333333,
           "rank": 7
-        },
-        {
-          "team_id": 4,
-          "team_name": "St. Louis Cardinals",
-          "value": 1.21920781,
-          "rank": 8
-        },
-        {
-          "team_id": 2,
-          "team_name": "Chicago Cubs",
-          "value": 1.26614173,
-          "rank": 9
         },
         {
           "team_id": 8,
           "team_name": "Toronto Blue Jays ",
-          "value": 1.26614173,
+          "value": 1.24710983,
+          "rank": 8
+        },
+        {
+          "team_id": 4,
+          "team_name": "St. Louis Cardinals",
+          "value": 1.25989111,
+          "rank": 9
+        },
+        {
+          "team_id": 2,
+          "team_name": "Chicago Cubs",
+          "value": 1.28217636,
           "rank": 10
         },
         {
           "team_id": 10,
           "team_name": "Seattle Mariners",
-          "value": 1.28108108,
+          "value": 1.28916545,
           "rank": 11
         },
         {
           "team_id": 7,
           "team_name": "Boston Red Sox",
-          "value": 1.44556114,
+          "value": 1.44593088,
           "rank": 12
         }
       ]
